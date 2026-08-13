@@ -87,4 +87,25 @@ class Listing {
       status: json['status'] ?? 'active',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      '_id': id,
+      'title': title,
+      'description': description,
+      'category': category,
+      'price': price,
+      'stockQuantity': stockQuantity,
+      'condition': condition,
+      'isNegotiable': isNegotiable,
+      'isStoreItem': isStoreItem,
+      'storeBadge': storeBadge,
+      'images': images,
+      'locationAddress': locationAddress,
+      'sellerName': sellerName,
+      'sellerAvatar': sellerAvatar,
+      'status': status,
+    };
+  }
 }

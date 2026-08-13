@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_item.dart';
@@ -57,11 +58,13 @@ class AppProvider extends ChangeNotifier {
       _cartItems.add(CartItem(listing: item, quantity: quantity));
     }
     notifyListeners();
+    _saveCartToStorage();
   }
 
   void removeFromCart(String listingId) {
     _cartItems.removeWhere((item) => item.listing.id == listingId);
     notifyListeners();
+    _saveCartToStorage();
   }
 
   void updateCartQuantity(String listingId, int quantity) {
@@ -73,12 +76,41 @@ class AppProvider extends ChangeNotifier {
     if (index != -1) {
       _cartItems[index].quantity = quantity;
       notifyListeners();
+      _saveCartToStorage();
     }
   }
 
   void clearCart() {
     _cartItems.clear();
     notifyListeners();
+    _saveCartToStorage();
+  }
+
+  Future<void> _saveCartToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cartJsonList = _cartItems.map((item) => json.encode(item.toJson())).toList();
+      await prefs.setStringList('user_cart_items', cartJsonList);
+    } catch (e) {
+      debugPrint('Error saving cart to storage: $e');
+    }
+  }
+
+  Future<void> _loadCartFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCart = prefs.getStringList('user_cart_items');
+      if (savedCart != null && savedCart.isNotEmpty) {
+        _cartItems.clear();
+        for (var str in savedCart) {
+          final Map<String, dynamic> decoded = json.decode(str);
+          _cartItems.add(CartItem.fromJson(decoded));
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading cart from storage: $e');
+    }
   }
 
   List<Map<String, dynamic>> get userOrders => _userOrders;
@@ -141,6 +173,7 @@ class AppProvider extends ChangeNotifier {
   AppProvider() {
     loadStoreItems();
     _loadSavedFavorites();
+    _loadCartFromStorage();
     loadUserOrders();
     _startAutoRefresh();
   }
