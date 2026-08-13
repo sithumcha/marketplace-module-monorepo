@@ -108,7 +108,27 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _loadCartFromStorage() async {
     try {
-      // 1. Try loading from MongoDB database first
+      // 1. Try loading from local SharedPreferences FIRST (Instant UI restoration)
+      final prefs = await SharedPreferences.getInstance();
+      final savedCart = prefs.getStringList('user_cart_items');
+      if (savedCart != null && savedCart.isNotEmpty) {
+        _cartItems.clear();
+        for (var str in savedCart) {
+          try {
+            final dynamic decoded = json.decode(str);
+            if (decoded is Map) {
+              final map = Map<String, dynamic>.from(decoded);
+              _cartItems.add(CartItem.fromJson(map));
+            }
+          } catch (err) {
+            debugPrint('Error decoding cart item JSON: $err');
+          }
+        }
+        notifyListeners();
+        return;
+      }
+
+      // 2. Fallback to loading from MongoDB database
       final dbCart = await ApiService.fetchCartFromDb(_userEmail);
       if (dbCart.isNotEmpty) {
         _cartItems.clear();
@@ -118,7 +138,7 @@ class AppProvider extends ChangeNotifier {
             title: item['itemTitle'] ?? 'Product Item',
             description: 'Item stored in MongoDB cart.',
             category: 'electronics',
-            price: (item['price'] is num) ? (item['price'] as num).toDouble() : 0.0,
+            price: (item['price'] is num) ? (item['price'] as num).toDouble() : (double.tryParse(item['price']?.toString() ?? '0') ?? 0.0),
             stockQuantity: 10,
             condition: 'Brand New',
             isNegotiable: true,
@@ -131,26 +151,6 @@ class AppProvider extends ChangeNotifier {
             status: 'active',
           );
           _cartItems.add(CartItem(listing: listing, quantity: item['quantity'] ?? 1));
-        }
-        notifyListeners();
-        return;
-      }
-
-      // 2. Fallback to local SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final savedCart = prefs.getStringList('user_cart_items');
-      if (savedCart != null && savedCart.isNotEmpty) {
-        _cartItems.clear();
-        for (var str in savedCart) {
-          try {
-            final dynamic decoded = json.decode(str);
-            if (decoded is Map) {
-              final map = Map<String, dynamic>.from(decoded as Map);
-              _cartItems.add(CartItem.fromJson(map));
-            }
-          } catch (err) {
-            debugPrint('Error decoding cart item JSON: $err');
-          }
         }
         notifyListeners();
       }

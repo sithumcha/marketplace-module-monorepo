@@ -75,13 +75,31 @@ class Listing {
       rawId = 'item_$rawTitle';
     }
 
+    double parsedPrice = 0.0;
+    if (json['price'] != null) {
+      if (json['price'] is num) {
+        parsedPrice = (json['price'] as num).toDouble();
+      } else {
+        parsedPrice = double.tryParse(json['price'].toString()) ?? 0.0;
+      }
+    }
+
+    int parsedStock = 1;
+    if (json['stockQuantity'] != null) {
+      if (json['stockQuantity'] is num) {
+        parsedStock = (json['stockQuantity'] as num).toInt();
+      } else {
+        parsedStock = int.tryParse(json['stockQuantity'].toString()) ?? 1;
+      }
+    }
+
     return Listing(
       id: rawId,
       title: json['title'] ?? 'Store Product',
       description: json['description'] ?? 'Official store product with warranty.',
       category: json['category'] ?? 'electronics',
-      price: (json['price'] != null) ? (json['price'] as num).toDouble() : 0.0,
-      stockQuantity: (json['stockQuantity'] != null) ? (json['stockQuantity'] as num).toInt() : 1,
+      price: parsedPrice,
+      stockQuantity: parsedStock,
       condition: json['condition'] ?? 'new',
       isNegotiable: json['isNegotiable'] ?? false,
       isStoreItem: json['isStoreItem'] ?? true,
