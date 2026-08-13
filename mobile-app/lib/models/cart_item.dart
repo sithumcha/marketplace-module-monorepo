@@ -20,8 +20,10 @@ class CartItem {
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic> listingMap = {};
-    if (json['listing'] != null && json['listing'] is Map) {
+    if (json.containsKey('listing') && json['listing'] is Map) {
       listingMap = Map<String, dynamic>.from(json['listing'] as Map);
+    } else {
+      listingMap = Map<String, dynamic>.from(json);
     }
     return CartItem(
       listing: Listing.fromJson(listingMap),
