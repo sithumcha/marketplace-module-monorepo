@@ -103,8 +103,15 @@ class AppProvider extends ChangeNotifier {
       if (savedCart != null && savedCart.isNotEmpty) {
         _cartItems.clear();
         for (var str in savedCart) {
-          final Map<String, dynamic> decoded = json.decode(str);
-          _cartItems.add(CartItem.fromJson(decoded));
+          try {
+            final dynamic decoded = json.decode(str);
+            if (decoded is Map) {
+              final map = Map<String, dynamic>.from(decoded as Map);
+              _cartItems.add(CartItem.fromJson(map));
+            }
+          } catch (err) {
+            debugPrint('Error decoding cart item JSON: $err');
+          }
         }
         notifyListeners();
       }

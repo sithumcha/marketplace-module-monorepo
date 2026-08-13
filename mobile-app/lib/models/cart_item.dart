@@ -19,9 +19,13 @@ class CartItem {
   }
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic> listingMap = {};
+    if (json['listing'] != null && json['listing'] is Map) {
+      listingMap = Map<String, dynamic>.from(json['listing'] as Map);
+    }
     return CartItem(
-      listing: Listing.fromJson(json['listing'] is Map<String, dynamic> ? json['listing'] : json['listing']),
-      quantity: json['quantity'] ?? 1,
+      listing: Listing.fromJson(listingMap),
+      quantity: (json['quantity'] != null) ? (json['quantity'] as num).toInt() : 1,
     );
   }
 }
