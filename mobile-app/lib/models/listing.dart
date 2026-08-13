@@ -69,8 +69,14 @@ class Listing {
       location = json['location']['address'] ?? 'Store HQ';
     }
 
+    String rawId = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+    if (rawId.isEmpty) {
+      final String rawTitle = (json['title'] ?? 'item').toString().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+      rawId = 'item_$rawTitle';
+    }
+
     return Listing(
-      id: json['_id'] ?? json['id'] ?? 'item_${DateTime.now().millisecondsSinceEpoch}',
+      id: rawId,
       title: json['title'] ?? 'Store Product',
       description: json['description'] ?? 'Official store product with warranty.',
       category: json['category'] ?? 'electronics',

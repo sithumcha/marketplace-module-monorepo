@@ -15,6 +15,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes');
 const auctionRoutes = require('./src/routes/auctionRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
+const cartRoutes = require('./src/routes/cartRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +47,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/auctions', auctionRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

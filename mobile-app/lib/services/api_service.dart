@@ -142,4 +142,44 @@ class ApiService {
     }
     return false;
   }
+
+  /// Syncs user shopping cart items directly to MongoDB database
+  static Future<bool> syncCartToDb(String userEmail, List<Map<String, dynamic>> cartItems) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/cart/sync'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'userEmail': userEmail,
+          'items': cartItems,
+        }),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        debugPrint('✅ Cart synced to MongoDB for: $userEmail');
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error syncing cart to MongoDB: $e');
+    }
+    return false;
+  }
+
+  /// Fetches saved shopping cart items directly from MongoDB database
+  static Future<List<Map<String, dynamic>>> fetchCartFromDb(String userEmail) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/cart?email=${Uri.encodeComponent(userEmail)}'),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['cart'] != null) {
+          final List list = data['cart'];
+          return list.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching cart from MongoDB: $e');
+    }
+    return [];
+  }
 }

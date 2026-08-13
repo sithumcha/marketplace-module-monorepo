@@ -91,13 +91,52 @@ class AppProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final cartJsonList = _cartItems.map((item) => json.encode(item.toJson())).toList();
       await prefs.setStringList('user_cart_items', cartJsonList);
+
+      // Persist directly to MongoDB Database via Express Backend API
+      final dbPayload = _cartItems.map((item) => {
+        'listingId': item.listing.id,
+        'itemTitle': item.listing.title,
+        'price': item.listing.price,
+        'quantity': item.quantity,
+        'image': item.listing.images.isNotEmpty ? item.listing.images.first : '',
+      }).toList();
+      await ApiService.syncCartToDb(_userEmail, dbPayload);
     } catch (e) {
-      debugPrint('Error saving cart to storage: $e');
+      debugPrint('Error saving cart to storage/db: $e');
     }
   }
 
   Future<void> _loadCartFromStorage() async {
     try {
+      // 1. Try loading from MongoDB database first
+      final dbCart = await ApiService.fetchCartFromDb(_userEmail);
+      if (dbCart.isNotEmpty) {
+        _cartItems.clear();
+        for (var item in dbCart) {
+          final listing = Listing(
+            id: item['listingId'] ?? 'item_cart',
+            title: item['itemTitle'] ?? 'Product Item',
+            description: 'Item stored in MongoDB cart.',
+            category: 'electronics',
+            price: (item['price'] is num) ? (item['price'] as num).toDouble() : 0.0,
+            stockQuantity: 10,
+            condition: 'Brand New',
+            isNegotiable: true,
+            isStoreItem: true,
+            storeBadge: 'Verified Seller',
+            images: [item['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600'],
+            locationAddress: 'Colombo, Sri Lanka',
+            sellerName: 'Official Store',
+            sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+            status: 'active',
+          );
+          _cartItems.add(CartItem(listing: listing, quantity: item['quantity'] ?? 1));
+        }
+        notifyListeners();
+        return;
+      }
+
+      // 2. Fallback to local SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final savedCart = prefs.getStringList('user_cart_items');
       if (savedCart != null && savedCart.isNotEmpty) {
@@ -225,7 +264,9 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
     }
     final fetched = await ApiService.fetchStoreItems();
-    _listings = fetched;
+    if (fetched.isNotEmpty) {
+      _listings = fetched;
+    }
     _isLoading = false;
     notifyListeners();
   }
