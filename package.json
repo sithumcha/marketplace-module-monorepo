@@ -1,0 +1,10 @@
+{
+  "name": "marketplace-module-monorepo",
+  "version": "1.0.0",
+  "description": "Complete Marketplace Module Monorepo (Mobile App, Admin Panel, Express/MongoDB Backend)",
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:admin": "cd admin-panel && npm run dev",
+    "start:mobile": "cd mobile-app && flutter run -d chrome"
+  }
+}

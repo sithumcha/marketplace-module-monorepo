@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables
+.env
+backend/.env
+
+# Build outputs & Logs
+dist/
+**/dist/
+build/
+**/build/
+mongodb.log
+*.log
+
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# IDE / OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
