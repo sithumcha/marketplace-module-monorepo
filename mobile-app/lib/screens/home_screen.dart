@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../models/listing.dart';
 import '../providers/app_provider.dart';
+import '../providers/locale_provider.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 import 'profile_options_screens.dart';
@@ -154,6 +155,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 Row(
                   children: [
+                    // Language Switcher Chip (EN / SI)
+                    InkWell(
+                      onTap: () {
+                        final localeProv = Provider.of<LocaleProvider>(context, listen: false);
+                        localeProv.toggleLanguage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('🌐 Language switched to ${localeProv.isSinhala ? "English" : "සිංහල"}'),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: const Color(0xFF6366F1),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF6366F1)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.language, size: 14, color: Color(0xFF818CF8)),
+                            const SizedBox(width: 4),
+                            Text(
+                              Provider.of<LocaleProvider>(context).getText('langToggle'),
+                              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.06),

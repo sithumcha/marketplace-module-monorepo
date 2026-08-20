@@ -3,17 +3,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_provider.dart';
+import 'providers/locale_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/profile_screen.dart';
-
 import 'screens/create_listing_screen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+      ],
       child: const MarketplaceFlutterApp(),
     ),
   );
@@ -63,6 +66,7 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AppProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return Scaffold(
       backgroundColor: provider.scaffoldBg,
@@ -73,7 +77,7 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color(0xFF6366F1),
         icon: const Icon(LucideIcons.plus, color: Colors.white),
-        label: Text('Sell Item', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+        label: Text(localeProvider.getText('sellItem'), style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateListingScreen()),
@@ -94,11 +98,11 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.inter(fontSize: 11),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.search), label: 'Search'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.messageSquare), label: 'Chats'),
-            BottomNavigationBarItem(icon: Icon(LucideIcons.user), label: 'Profile'),
+          items: [
+            BottomNavigationBarItem(icon: const Icon(LucideIcons.home), label: localeProvider.getText('home')),
+            BottomNavigationBarItem(icon: const Icon(LucideIcons.search), label: localeProvider.getText('search')),
+            BottomNavigationBarItem(icon: const Icon(LucideIcons.messageSquare), label: localeProvider.getText('chats')),
+            BottomNavigationBarItem(icon: const Icon(LucideIcons.user), label: localeProvider.getText('profile')),
           ],
         ),
       ),

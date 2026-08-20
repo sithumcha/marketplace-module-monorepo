@@ -117,7 +117,17 @@ MONGODB_URI=mongodb://localhost:27017/marketplace_db
 JWT_SECRET=marketplace_secret_jwt_key_2026
 ```
 
-### 3. Start Services
+### 3. Option A: Run via Docker Compose (Recommended)
+Launch all 4 services (MongoDB, Backend, Admin Panel, Mobile Web App) in one single command:
+```bash
+docker-compose up --build
+```
+- **Mobile Web App**: `http://localhost:3000`
+- **Admin Panel**: `http://localhost:3001`
+- **Backend API**: `http://localhost:5000`
+- **MongoDB**: `localhost:27017`
+
+### 4. Option B: Run Services Manually
 
 - **Backend API & Socket Server** (Port 5000):
   ```bash
