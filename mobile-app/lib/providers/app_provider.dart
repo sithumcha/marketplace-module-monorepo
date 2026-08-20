@@ -89,8 +89,25 @@ class AppProvider extends ChangeNotifier {
   Future<void> _saveCartToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cartJsonList = _cartItems.map((item) => json.encode(item.toJson())).toList();
-      await prefs.setStringList('user_cart_items', cartJsonList);
+      
+      // Store compact, lightweight JSON payload (~100 bytes per item, no quota limit errors)
+      final compactCart = _cartItems.map((item) {
+        String cleanImg = item.listing.images.isNotEmpty ? item.listing.images.first : '';
+        if (cleanImg.length > 200 || cleanImg.startsWith('data:image')) {
+          cleanImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
+        }
+        return json.encode({
+          'id': item.listing.id,
+          'title': item.listing.title,
+          'price': item.listing.price,
+          'quantity': item.quantity,
+          'image': cleanImg,
+          'category': item.listing.category,
+        });
+      }).toList();
+
+      await prefs.setStringList('user_cart_items', compactCart);
+      debugPrint('✅ Compact Cart saved to SharedPreferences: ${compactCart.length} items');
 
       // Persist directly to MongoDB Database via Express Backend API
       final dbPayload = _cartItems.map((item) => {
@@ -98,7 +115,9 @@ class AppProvider extends ChangeNotifier {
         'itemTitle': item.listing.title,
         'price': item.listing.price,
         'quantity': item.quantity,
-        'image': item.listing.images.isNotEmpty ? item.listing.images.first : '',
+        'image': item.listing.images.isNotEmpty && !item.listing.images.first.startsWith('data:image')
+            ? item.listing.images.first
+            : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200',
       }).toList();
       await ApiService.syncCartToDb(_userEmail, dbPayload);
     } catch (e) {
@@ -118,12 +137,44 @@ class AppProvider extends ChangeNotifier {
             final dynamic decoded = json.decode(str);
             if (decoded is Map) {
               final map = Map<String, dynamic>.from(decoded);
-              _cartItems.add(CartItem.fromJson(map));
+              
+              final String itemId = map['id'] ?? map['listingId'] ?? (map['listing'] != null ? map['listing']['id'] : null) ?? 'item_cart';
+              final String itemTitle = map['title'] ?? map['itemTitle'] ?? (map['listing'] != null ? map['listing']['title'] : null) ?? 'Product Item';
+              final double itemPrice = (map['price'] is num)
+                  ? (map['price'] as num).toDouble()
+                  : (map['listing'] != null && map['listing']['price'] is num ? (map['listing']['price'] as num).toDouble() : (double.tryParse(map['price']?.toString() ?? '0') ?? 0.0));
+              final int itemQty = (map['quantity'] is num) ? (map['quantity'] as num).toInt() : 1;
+              
+              String itemImg = map['image'] ?? (map['images'] != null && (map['images'] as List).isNotEmpty ? map['images'][0] : null) ?? (map['listing'] != null && map['listing']['images'] != null && (map['listing']['images'] as List).isNotEmpty ? map['listing']['images'][0] : null) ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
+              if (itemImg.startsWith('data:image') || itemImg.length > 300) {
+                itemImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
+              }
+
+              final listing = Listing(
+                id: itemId,
+                title: itemTitle,
+                description: 'Saved cart item.',
+                category: map['category'] ?? 'electronics',
+                price: itemPrice,
+                stockQuantity: 10,
+                condition: 'Brand New',
+                isNegotiable: true,
+                isStoreItem: true,
+                storeBadge: 'Verified Seller',
+                images: [itemImg],
+                locationAddress: 'Colombo, Sri Lanka',
+                sellerName: 'Official Store',
+                sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                status: 'active',
+              );
+
+              _cartItems.add(CartItem(listing: listing, quantity: itemQty));
             }
           } catch (err) {
             debugPrint('Error decoding cart item JSON: $err');
           }
         }
+        debugPrint('🛒 Restored ${_cartItems.length} items to cart from SharedPreferences!');
         notifyListeners();
         return;
       }
@@ -144,7 +195,7 @@ class AppProvider extends ChangeNotifier {
             isNegotiable: true,
             isStoreItem: true,
             storeBadge: 'Verified Seller',
-            images: [item['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600'],
+            images: [item['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300'],
             locationAddress: 'Colombo, Sri Lanka',
             sellerName: 'Official Store',
             sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',

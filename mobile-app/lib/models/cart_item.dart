@@ -12,8 +12,31 @@ class CartItem {
   double get totalPrice => listing.price * quantity;
 
   Map<String, dynamic> toJson() {
+    final List<String> sanitizedImages = listing.images.map((img) {
+      if (img.startsWith('data:image') || img.length > 300) {
+        return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+      }
+      return img;
+    }).toList();
+
     return {
-      'listing': listing.toJson(),
+      'listing': {
+        'id': listing.id,
+        'title': listing.title,
+        'description': listing.description,
+        'category': listing.category,
+        'price': listing.price,
+        'stockQuantity': listing.stockQuantity,
+        'condition': listing.condition,
+        'isNegotiable': listing.isNegotiable,
+        'isStoreItem': listing.isStoreItem,
+        'storeBadge': listing.storeBadge,
+        'images': sanitizedImages,
+        'locationAddress': listing.locationAddress,
+        'sellerName': listing.sellerName,
+        'sellerAvatar': listing.sellerAvatar,
+        'status': listing.status,
+      },
       'quantity': quantity,
     };
   }
