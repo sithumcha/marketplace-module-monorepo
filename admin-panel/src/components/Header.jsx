@@ -33,7 +33,7 @@ export default function Header({ title, onRefresh, theme, setTheme }) {
   useEffect(() => {
     // Simulate real-time Socket.io live incoming alert notification after 6s
     const timer = setTimeout(() => {
-      triggerLiveAlert('🛒 New Customer Order #ORD-9842 received from Sithum Nethsara!');
+      triggerLiveAlert('🛒 New Customer Order #ORD-9842 received!');
     }, 6000);
     return () => clearTimeout(timer);
   }, []);

@@ -16,6 +16,9 @@ const auctionRoutes = require('./src/routes/auctionRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
+const wishlistRoutes = require('./src/routes/wishlistRoutes');
+const promoRoutes = require('./src/routes/promoRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +30,7 @@ const io = new Server(server, {
 });
 
 chatSocketHandler(io);
+app.set('io', io);
 
 // Middlewares
 app.use(cors());
@@ -36,8 +40,11 @@ app.use(express.urlencoded({ extended: true }));
 // Connect Database
 connectDB();
 
+const { getUsers } = require('./src/controllers/adminController');
+
 // API Endpoints
 app.use('/api/auth', authRoutes);
+app.get('/api/users', getUsers);
 app.use('/api/listings', listingRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/chats', chatRoutes);
@@ -48,6 +55,9 @@ app.use('/api/auctions', auctionRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/promos', promoRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

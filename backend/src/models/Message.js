@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },
-  senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  chatId: { type: String, required: true },
+  senderId: { type: String, required: true },
+  sender: { type: String },
+  isAdmin: { type: Boolean, default: false },
   type: { type: String, enum: ['text', 'image', 'offer', 'location'], default: 'text' },
   text: String,
   imageUrl: String,
   offerData: {
-    offerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Offer' },
+    offerId: String,
     amount: Number,
     status: { type: String, enum: ['pending', 'accepted', 'rejected', 'countered'] }
   },

@@ -7,8 +7,8 @@ const orderSchema = new mongoose.Schema({
   quantity: { type: Number, default: 1 },
   image: { type: String },
   status: { type: String, enum: ['Processing', 'Dispatched', 'Delivered', 'Cancelled'], default: 'Processing' },
-  buyerName: { type: String, default: 'Sithum Nethsara' },
-  buyerEmail: { type: String, default: 'sithum@marketplace.lk' },
+  buyerName: { type: String, default: 'Customer' },
+  buyerEmail: { type: String, default: 'user@marketplace.lk' },
   shippingAddress: { type: String },
   paymentMethod: { type: String },
   createdAt: { type: Date, default: Date.now }

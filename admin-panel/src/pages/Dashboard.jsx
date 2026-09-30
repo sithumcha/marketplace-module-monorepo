@@ -26,13 +26,13 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
           return (
             <div key={idx} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: 600 }}>{card.title}</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>{card.title}</span>
                 <div style={{ background: `${card.color}20`, padding: '8px', borderRadius: '10px' }}>
                   <Icon size={20} color={card.color} />
                 </div>
               </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: '#fff' }}>{card.value}</div>
-              <div style={{ fontSize: '12px', color: '#34D399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-title)' }}>{card.value}</div>
+              <div style={{ fontSize: '12px', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <TrendingUp size={12} /> {card.change}
               </div>
             </div>
@@ -46,8 +46,8 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
         <div className="glass-panel" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff' }}>Pending Moderation Queue</h3>
-              <p style={{ fontSize: '12px', color: '#9CA3AF' }}>Items requiring immediate admin attention</p>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-title)' }}>Pending Moderation Queue</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Items requiring immediate admin attention</p>
             </div>
             <button className="glass-btn btn-primary" onClick={() => onNavigate('listings')}>
               View All Queue
@@ -55,12 +55,12 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'var(--bg-input)', padding: '16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=150" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} alt="item" />
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>Apple MacBook Pro 16" M2 Max</div>
-                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Category: Electronics • Price: $1,850</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-title)' }}>Apple MacBook Pro 16" M2 Max</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Category: Electronics • Price: $1,850</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -69,12 +69,12 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'var(--bg-input)', padding: '16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=150" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} alt="item" />
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>Vintage Designer Leather Jacket</div>
-                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Reported: Inaccurate Condition • By: Alex Johnson</div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-title)' }}>Vintage Designer Leather Jacket</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Reported: Inaccurate Condition • By: Alex Johnson</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -87,7 +87,7 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
 
         {/* Right: Live Activity Log */}
         <div className="glass-panel" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginBottom: '16px' }}>Live Activity Stream</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-title)', marginBottom: '16px' }}>Live Activity Stream</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {recentActivities.map((act, i) => {
               const Icon = act.icon;
@@ -97,8 +97,8 @@ export default function Dashboard({ stats = {}, onNavigate = () => {} }) {
                     <Icon size={14} color={act.color} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '13px', color: '#E5E7EB', fontWeight: 500 }}>{act.text}</div>
-                    <div style={{ fontSize: '11px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-main)', fontWeight: 600 }}>{act.text}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                       <Clock size={10} /> {act.time}
                     </div>
                   </div>

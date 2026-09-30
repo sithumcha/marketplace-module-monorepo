@@ -14,8 +14,8 @@ const createOrder = async (req, res) => {
       quantity: orderedQty,
       image: image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300',
       status: status || 'Processing',
-      buyerName: buyerName || 'Sithum Nethsara',
-      buyerEmail: buyerEmail || 'sithum@marketplace.lk',
+      buyerName: buyerName || 'Customer',
+      buyerEmail: buyerEmail || 'user@marketplace.lk',
       shippingAddress: shippingAddress || 'No. 45, Galle Road, Colombo 03',
       paymentMethod: paymentMethod || 'CARD'
     });
@@ -131,9 +131,31 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mongoose = require('mongoose');
+    let deleted;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      deleted = await Order.findByIdAndDelete(id);
+    }
+    if (!deleted) {
+      deleted = await Order.findOneAndDelete({ orderId: id });
+    }
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    console.log(`🗑️ Order Deleted from MongoDB: ${id}`);
+    return res.json({ success: true, message: 'Order deleted successfully' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  deleteOrder
 };

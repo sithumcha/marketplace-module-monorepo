@@ -17,6 +17,21 @@ const userSchema = new mongoose.Schema({
   },
   walletBalance: { type: Number, default: 150.00 },
   status: { type: String, enum: ['active', 'suspended', 'banned'], default: 'active' },
+  savedAddresses: [{
+    id: { type: String },
+    label: { type: String },
+    fullName: { type: String },
+    addressLine: { type: String },
+    city: { type: String },
+    phone: { type: String }
+  }],
+  bankPayoutDetails: {
+    bankName: { type: String, default: 'Bank of Ceylon (BOC)' },
+    accountHolder: { type: String, default: 'Account Holder' },
+    accountNumber: { type: String, default: '884920194821' },
+    branch: { type: String, default: 'Colombo Main Branch' },
+    swiftCode: { type: String, default: 'BCEYLKLX' }
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

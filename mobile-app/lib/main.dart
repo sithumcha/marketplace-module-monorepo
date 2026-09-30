@@ -29,17 +29,33 @@ class MarketplaceFlutterApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<AppProvider>(context);
 
+    final isLight = provider.isLightMode;
+
     return MaterialApp(
       title: 'Marketplace Flutter App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData(
+        brightness: isLight ? Brightness.light : Brightness.dark,
         scaffoldBackgroundColor: provider.scaffoldBg,
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF6366F1),
-          secondary: const Color(0xFF8B5CF6),
-          surface: provider.cardBg,
+        colorScheme: isLight
+            ? ColorScheme.light(
+                primary: const Color(0xFF6366F1),
+                secondary: const Color(0xFF8B5CF6),
+                surface: provider.cardBg,
+                onSurface: provider.textColor,
+              )
+            : ColorScheme.dark(
+                primary: const Color(0xFF6366F1),
+                secondary: const Color(0xFF8B5CF6),
+                surface: provider.cardBg,
+                onSurface: provider.textColor,
+              ),
+        textTheme: GoogleFonts.interTextTheme(
+          isLight ? ThemeData.light().textTheme : ThemeData.dark().textTheme,
+        ).apply(
+          bodyColor: provider.textColor,
+          displayColor: provider.textColor,
         ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       ),
       home: const MainTabScaffold(),
     );
@@ -74,17 +90,8 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
         index: _currentIndex,
         children: _screens,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF6366F1),
-        icon: const Icon(LucideIcons.plus, color: Colors.white),
-        label: Text(localeProvider.getText('sellItem'), style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateListingScreen()),
-          );
-        },
-      ),
       bottomNavigationBar: Container(
+
         decoration: BoxDecoration(
           color: provider.navBg,
           border: Border(top: BorderSide(color: provider.cardBorder)),
@@ -93,8 +100,8 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
           currentIndex: _currentIndex,
           onTap: (index) => setState(() => _currentIndex = index),
           backgroundColor: provider.navBg,
-          selectedItemColor: const Color(0xFF818CF8),
-          unselectedItemColor: const Color(0xFF9CA3AF),
+          selectedItemColor: const Color(0xFF6366F1),
+          unselectedItemColor: provider.subtextColor,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold),
           unselectedLabelStyle: GoogleFonts.inter(fontSize: 11),
@@ -109,3 +116,4 @@ class _MainTabScaffoldState extends State<MainTabScaffold> {
     );
   }
 }
+

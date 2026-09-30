@@ -18,17 +18,17 @@ class FavoritesScreen extends StatelessWidget {
     final favItems = provider.listings.where((item) => provider.isFavorite(item.id)).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Saved Favorites (${favItems.length})',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor),
         ),
         centerTitle: true,
       ),
@@ -46,9 +46,9 @@ class FavoritesScreen extends StatelessWidget {
                     child: const Icon(LucideIcons.heartHandshake, size: 50, color: Color(0xFFEF4444)),
                   ),
                   const SizedBox(height: 16),
-                  Text('No Saved Favorites Yet', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text('No Saved Favorites Yet', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
                   const SizedBox(height: 8),
-                  Text('Tap the heart icon on any product to save it here.', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF))),
+                  Text('Tap the heart icon on any product to save it here.', style: GoogleFonts.inter(fontSize: 12, color: provider.subtextColor)),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -70,9 +70,9 @@ class FavoritesScreen extends StatelessWidget {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: provider.cardBg,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF334155)),
+                    border: Border.all(color: provider.cardBorder),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
@@ -89,14 +89,14 @@ class FavoritesScreen extends StatelessWidget {
                       item.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
                         Text('\$${item.price.toStringAsFixed(0)} • Stock: ${item.stockQuantity}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF34D399), fontWeight: FontWeight.bold)),
-                        Text('📍 ${item.locationAddress}', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF9CA3AF))),
+                        Text('📍 ${item.locationAddress}', style: GoogleFonts.inter(fontSize: 10, color: provider.subtextColor)),
                       ],
                     ),
                     trailing: IconButton(
@@ -114,6 +114,7 @@ class FavoritesScreen extends StatelessWidget {
               },
             ),
     );
+
   }
 }
 
@@ -128,15 +129,15 @@ class WalletScreen extends StatelessWidget {
     final provider = Provider.of<AppProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Wallet & Payment Cards', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Wallet & Payment Cards', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
         centerTitle: true,
       ),
       body: ListView(
@@ -223,16 +224,16 @@ class WalletScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-          Text('Connected Payment Cards', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Connected Payment Cards', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: provider.textColor)),
           const SizedBox(height: 10),
 
           // Visa Card Tile
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: provider.cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF334155)),
+              border: Border.all(color: provider.cardBorder),
             ),
             child: Row(
               children: [
@@ -249,8 +250,8 @@ class WalletScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Visa Debit •••• 8892', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                      Text('Expires 12/28 • Default Card', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                      Text('Visa Debit •••• 8892', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
+                      Text('Expires 12/28 • Default Card', style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor)),
                     ],
                   ),
                 ),
@@ -260,27 +261,28 @@ class WalletScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 24),
-          Text('Recent Wallet Transactions', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Recent Wallet Transactions', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: provider.textColor)),
           const SizedBox(height: 10),
 
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: provider.cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF334155)),
+              border: Border.all(color: provider.cardBorder),
             ),
             child: Center(
               child: Text(
                 'No transactions recorded yet. Real purchases & wallet top-ups will appear here.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF)),
+                style: GoogleFonts.inter(fontSize: 12, color: provider.subtextColor),
               ),
             ),
           ),
         ],
       ),
     );
+
   }
 
   Widget _buildTransactionRow(String title, String date, String amount, {required bool isDebit}) {
@@ -334,15 +336,15 @@ class OrderHistoryScreen extends StatelessWidget {
     final orders = provider.userOrders;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('My Orders', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('My Orders', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
         centerTitle: true,
       ),
       body: orders.isEmpty
@@ -363,13 +365,13 @@ class OrderHistoryScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'No Orders Placed Yet',
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'When you purchase items from the marketplace store, your real order tracking status and receipts will appear here.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF), height: 1.4),
+                      style: GoogleFonts.inter(fontSize: 12, color: provider.subtextColor, height: 1.4),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
@@ -405,12 +407,12 @@ class OrderHistoryScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: provider.cardBg,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isCancelled ? const Color(0xFFEF4444).withOpacity(0.5) : const Color(0xFF334155)),
+                    border: Border.all(color: isCancelled ? const Color(0xFFEF4444).withOpacity(0.5) : provider.cardBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withOpacity(provider.isLightMode ? 0.05 : 0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -462,9 +464,10 @@ class OrderHistoryScreen extends StatelessWidget {
                                   ord['itemTitle'],
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
                                 ),
                                 const SizedBox(height: 4),
+
                                 Text(
                                   '\$${(ord['price'] is num ? (ord['price'] as num).toDouble() : 0.0).toStringAsFixed(2)} • Qty: ${ord['quantity'] ?? 1}',
                                   style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF34D399), fontWeight: FontWeight.w800),
@@ -627,43 +630,45 @@ class _SafetySecurityScreenState extends State<SafetySecurityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<AppProvider>(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Safety & Security', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Safety & Security', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Security Settings Card
-          Text('Account Security Settings', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Account Security Settings', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: provider.textColor)),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: provider.cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF334155)),
+              border: Border.all(color: provider.cardBorder),
             ),
             child: Column(
               children: [
                 SwitchListTile(
-                  title: Text('2-Factor Authentication (2FA)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                  subtitle: Text('SMS OTP verification on login', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                  title: Text('2-Factor Authentication (2FA)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
+                  subtitle: Text('SMS OTP verification on login', style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor)),
                   activeColor: const Color(0xFF6366F1),
                   value: _twoFactor,
                   onChanged: (val) => setState(() => _twoFactor = val),
                 ),
-                const Divider(height: 1, color: Color(0xFF334155)),
+                Divider(height: 1, color: provider.cardBorder),
                 SwitchListTile(
-                  title: Text('Biometric Face ID / Fingerprint', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                  subtitle: Text('Unlock app using biometric sensor', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                  title: Text('Biometric Face ID / Fingerprint', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
+                  subtitle: Text('Unlock app using biometric sensor', style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor)),
                   activeColor: const Color(0xFF6366F1),
                   value: _biometric,
                   onChanged: (val) => setState(() => _biometric = val),
@@ -675,24 +680,25 @@ class _SafetySecurityScreenState extends State<SafetySecurityScreen> {
           const SizedBox(height: 24),
 
           // Scam Prevention & Safety Rules
-          Text('Marketplace Buyer Safety Tips', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('Marketplace Buyer Safety Tips', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: provider.textColor)),
           const SizedBox(height: 10),
-          _buildTipTile(LucideIcons.mapPin, 'Meet in Safe Public Places', 'Always inspect high-value items in well-lit public locations or official store hubs.'),
-          _buildTipTile(LucideIcons.shieldCheck, 'Use Marketplace Secure Checkout', 'Avoid wire transfers or unverified external links to stay covered by Buyer Protection.'),
-          _buildTipTile(LucideIcons.eye, 'Inspect Items Before Confirming', 'Check product condition, serial numbers, and functions before releasing payment.'),
+          _buildTipTile(context, LucideIcons.mapPin, 'Meet in Safe Public Places', 'Always inspect high-value items in well-lit public locations or official store hubs.'),
+          _buildTipTile(context, LucideIcons.shieldCheck, 'Use Marketplace Secure Checkout', 'Avoid wire transfers or unverified external links to stay covered by Buyer Protection.'),
+          _buildTipTile(context, LucideIcons.eye, 'Inspect Items Before Confirming', 'Check product condition, serial numbers, and functions before releasing payment.'),
         ],
       ),
     );
   }
 
-  Widget _buildTipTile(IconData icon, String title, String desc) {
+  Widget _buildTipTile(BuildContext context, IconData icon, String title, String desc) {
+    final provider = Provider.of<AppProvider>(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: provider.cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF334155)),
+        border: Border.all(color: provider.cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,9 +709,9 @@ class _SafetySecurityScreenState extends State<SafetySecurityScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
                 const SizedBox(height: 3),
-                Text(desc, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF), height: 1.3)),
+                Text(desc, style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor, height: 1.3)),
               ],
             ),
           ),
@@ -713,6 +719,7 @@ class _SafetySecurityScreenState extends State<SafetySecurityScreen> {
       ),
     );
   }
+
 }
 
 // ==========================================
@@ -740,10 +747,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Settings & Preferences', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Settings & Preferences', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
         centerTitle: true,
       ),
       body: ListView(
@@ -757,46 +764,132 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             child: Column(
               children: [
-                // Dark Glass AMOLED Mode Switch
-                SwitchListTile(
-                  secondary: const Icon(LucideIcons.sparkles, color: Color(0xFF8B5CF6)),
-                  title: Row(
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Dark Glass AMOLED Mode', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text('PURE BLACK', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
+                      Row(
+                        children: [
+                          Icon(
+                            provider.isLightMode ? LucideIcons.sun : (provider.isAmoledMode ? LucideIcons.sparkles : LucideIcons.moon),
+                            color: const Color(0xFF8B5CF6),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'App Theme & Appearance',
+                            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Choose between Light Mode, Midnight Dark, or AMOLED Black.',
+                        style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                provider.setThemeMode('light');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('☀️ Light Mode Activated!'),
+                                    backgroundColor: Color(0xFF6366F1),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: provider.isLightMode ? const Color(0xFF6366F1) : provider.chipBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: provider.isLightMode ? const Color(0xFF6366F1) : provider.cardBorder),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(LucideIcons.sun, size: 16, color: provider.isLightMode ? Colors.white : provider.textColor),
+                                    const SizedBox(height: 4),
+                                    Text('Light', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: provider.isLightMode ? Colors.white : provider.textColor)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                provider.setThemeMode('dark');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('🌙 Midnight Dark Mode Activated!'),
+                                    backgroundColor: Color(0xFF6366F1),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: provider.isDarkMode ? const Color(0xFF6366F1) : provider.chipBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: provider.isDarkMode ? const Color(0xFF6366F1) : provider.cardBorder),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(LucideIcons.moon, size: 16, color: provider.isDarkMode ? Colors.white : provider.textColor),
+                                    const SizedBox(height: 4),
+                                    Text('Dark', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: provider.isDarkMode ? Colors.white : provider.textColor)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                provider.setThemeMode('amoled');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('🌌 AMOLED Pitch Black Mode Activated!'),
+                                    backgroundColor: Color(0xFF6366F1),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: provider.isAmoledMode ? const Color(0xFF6366F1) : provider.chipBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: provider.isAmoledMode ? const Color(0xFF6366F1) : provider.cardBorder),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(LucideIcons.sparkles, size: 16, color: provider.isAmoledMode ? Colors.white : provider.textColor),
+                                    const SizedBox(height: 4),
+                                    Text('AMOLED', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: provider.isAmoledMode ? Colors.white : provider.textColor)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  subtitle: Text(
-                    provider.isAmoledMode
-                        ? 'True Pitch Black (#000000) enabled for OLED screens & maximum contrast.'
-                        : 'Midnight Slate Dark theme active.',
-                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF)),
-                  ),
-                  activeColor: const Color(0xFF8B5CF6),
-                  value: provider.isAmoledMode,
-                  onChanged: (val) {
-                    provider.toggleAmoledMode(val);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(val ? '🌌 Dark Glass AMOLED Mode (True Black) Activated!' : '🌙 Midnight Dark Mode Activated!'),
-                        backgroundColor: const Color(0xFF6366F1),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
                 ),
-                const Divider(height: 1, color: Color(0xFF334155)),
+
+                Divider(height: 1, color: provider.cardBorder),
                 ListTile(
                   leading: const Icon(LucideIcons.dollarSign, color: Color(0xFF818CF8)),
-                  title: Text('Display Currency', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                  title: Text('Display Currency', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
                   trailing: DropdownButton<String>(
                     value: _currency,
                     dropdownColor: provider.cardBg,
@@ -808,14 +901,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (val) => setState(() => _currency = val!),
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFF334155)),
+                Divider(height: 1, color: provider.cardBorder),
                 ListTile(
                   leading: const Icon(LucideIcons.globe, color: Color(0xFF818CF8)),
-                  title: Text('App Language', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                  title: Text('App Language', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
                   trailing: DropdownButton<String>(
                     value: _language,
                     dropdownColor: provider.cardBg,
-                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: GoogleFonts.inter(color: provider.textColor, fontWeight: FontWeight.bold, fontSize: 12),
                     underline: const SizedBox(),
                     items: ['English', 'සිංහල (Sinhala)'].map((String l) {
                       return DropdownMenuItem(value: l, child: Text(l));
@@ -823,11 +916,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (val) => setState(() => _language = val!),
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFF334155)),
+                Divider(height: 1, color: provider.cardBorder),
                 SwitchListTile(
                   secondary: const Icon(LucideIcons.bell, color: Color(0xFF818CF8)),
-                  title: Text('Push Notifications', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                  subtitle: Text('Receive order & chat updates', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                  title: Text('Push Notifications', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
+                  subtitle: Text('Receive order & chat updates', style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor)),
                   activeColor: const Color(0xFF6366F1),
                   value: _notifications,
                   onChanged: (val) => setState(() => _notifications = val),
@@ -835,6 +928,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+
 
           const SizedBox(height: 20),
           OutlinedButton.icon(

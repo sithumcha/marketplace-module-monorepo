@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../providers/app_provider.dart';
 import '../providers/locale_provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -13,7 +15,7 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
     this.sellerName = 'Official Store HQ',
-    this.itemTitle = 'Sony WH-1000XM5 Wireless Headphones',
+    this.itemTitle = 'In-App Support & Live Chat',
     this.itemPrice = 349.99,
   });
 
@@ -24,53 +26,81 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   final TextEditingController _offerController = TextEditingController();
-  bool _isSellerTyping = false;
-  Timer? _typingTimer;
+  IO.Socket? socket;
+  final String userId = 'user_demo';
 
   final List<Map<String, dynamic>> _messages = [
     {
+      'id': 1,
       'isMe': false,
-      'text': 'Hello! Welcome to Official Store HQ. How can we help you today?',
+      'sender': 'Support',
+      'text': 'Hello! Welcome to Marketplace Support. How can we help you today?',
       'time': '10:14 AM',
       'type': 'text',
-    },
-    {
-      'isMe': false,
-      'text': 'Price Offer Submitted',
-      'time': '10:16 AM',
-      'type': 'offer',
-      'offerPrice': 320.00,
-      'status': 'pending',
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    // Simulate seller typing indicator after 4 seconds
-    _typingTimer = Timer(const Duration(seconds: 4), () {
-      if (mounted) {
-        setState(() => _isSellerTyping = true);
-        Timer(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() {
-              _isSellerTyping = false;
-              _messages.add({
-                'isMe': false,
-                'text': 'I can offer a special \$320 discount for fast delivery today!',
-                'time': 'Just now',
-                'type': 'text',
-              });
+    _connectSocket();
+  }
+
+  void _connectSocket() {
+    try {
+      socket = IO.io(
+        'http://localhost:5000',
+        IO.OptionBuilder()
+            .setTransports(['websocket', 'polling'])
+            .disableAutoConnect()
+            .build(),
+      );
+
+      socket?.connect();
+
+      socket?.onConnect((_) {
+        print('Flutter Socket Connected');
+        socket?.emit('join_user', userId);
+        socket?.emit('join_chat', 'support_chat');
+      });
+
+      void handleIncomingMessage(dynamic data) {
+        if (data == null || !mounted) return;
+        final mapData = data is Map ? data : {'text': data.toString()};
+        final msgId = mapData['id'] ?? DateTime.now().millisecondsSinceEpoch;
+        final senderId = mapData['senderId'] ?? '';
+        final isMe = senderId == userId || mapData['sender'] == 'You';
+        final sender = isMe ? 'You' : (mapData['sender'] ?? 'Admin Support');
+        final text = mapData['text'] ?? '';
+
+        setState(() {
+          if (!_messages.any((m) => m['id'] == msgId)) {
+            _messages.add({
+              'id': msgId,
+              'isMe': isMe,
+              'sender': sender,
+              'text': text,
+              'time': mapData['time'] ?? 'Just now',
+              'type': mapData['type'] ?? 'text',
+              'offerPrice': mapData['offerData']?['amount'],
+              'status': mapData['offerData']?['status'] ?? 'pending',
             });
           }
         });
       }
-    });
+
+      socket?.on('receive_message', handleIncomingMessage);
+      socket?.on('chat_message', handleIncomingMessage);
+
+    } catch (e) {
+      print('Socket connection error: $e');
+    }
   }
 
   @override
   void dispose() {
-    _typingTimer?.cancel();
+    socket?.disconnect();
+    socket?.dispose();
     _msgController.dispose();
     _offerController.dispose();
     super.dispose();
@@ -79,30 +109,41 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage([String? customText]) {
     final text = customText ?? _msgController.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      _messages.add({
-        'isMe': true,
-        'text': text,
-        'time': 'Just now',
-        'type': 'text',
-      });
-    });
+
+    final msgId = DateTime.now().millisecondsSinceEpoch;
+    final payload = {
+      'id': msgId,
+      'chatId': 'support_chat',
+      'userId': userId,
+      'senderId': userId,
+      'sender': 'You',
+      'text': text,
+      'type': 'text',
+      'time': 'Just now',
+    };
+
+    socket?.emit('send_message', payload);
     _msgController.clear();
   }
 
   void _sendCounterOffer() {
     final amount = double.tryParse(_offerController.text.trim());
     if (amount == null || amount <= 0) return;
-    setState(() {
-      _messages.add({
-        'isMe': true,
-        'text': 'Counter Offer \$${amount.toStringAsFixed(2)}',
-        'time': 'Just now',
-        'type': 'offer',
-        'offerPrice': amount,
-        'status': 'pending',
-      });
-    });
+
+    final msgId = DateTime.now().millisecondsSinceEpoch;
+    final payload = {
+      'id': msgId,
+      'chatId': 'support_chat',
+      'userId': userId,
+      'senderId': userId,
+      'sender': 'You',
+      'text': 'Counter Offer \$${amount.toStringAsFixed(2)}',
+      'type': 'offer',
+      'offerData': {'amount': amount, 'status': 'pending'},
+      'time': 'Just now',
+    };
+
+    socket?.emit('send_message', payload);
     _offerController.clear();
     Navigator.pop(context);
   }
@@ -111,6 +152,12 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messages[index]['status'] = status;
     });
+
+    socket?.emit('respond_offer', {
+      'chatId': 'support_chat',
+      'status': status,
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(status == 'accepted' ? '🎉 Offer Accepted! Added to Cart.' : '❌ Offer Rejected.'),
@@ -119,10 +166,10 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _showOfferModal() {
+  void _showOfferModal(AppProvider provider) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: provider.cardBg,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return Padding(
@@ -136,20 +183,22 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Submit Price Offer', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('Submit Price Offer', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
               const SizedBox(height: 6),
-              Text('Item Original Price: \$${widget.itemPrice.toStringAsFixed(2)}', style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
+              Text('Item Original Price: \$${widget.itemPrice.toStringAsFixed(2)}', style: TextStyle(color: provider.subtextColor, fontSize: 13)),
               const SizedBox(height: 16),
               TextField(
                 controller: _offerController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: provider.textColor),
                 decoration: InputDecoration(
                   labelText: 'Your Offer Price (USD)',
+                  labelStyle: TextStyle(color: provider.subtextColor),
                   prefixText: '\$ ',
+                  prefixStyle: TextStyle(color: provider.textColor),
                   filled: true,
-                  fillColor: const Color(0xFF0F172A),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  fillColor: provider.inputBg,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: provider.cardBorder)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -171,15 +220,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
     final localeProvider = context.watch<LocaleProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: provider.cardBg,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -187,45 +237,24 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Row(
               children: [
-                Text(widget.sellerName, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(widget.sellerName, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: provider.textColor)),
                 const SizedBox(width: 4),
                 const Icon(LucideIcons.checkCircle2, size: 14, color: Color(0xFF818CF8)),
               ],
             ),
-            Text(widget.itemTitle, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF34D399))),
+            Text('Live Multi-Device Socket Sync', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF34D399))),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.tag, color: Color(0xFFF59E0B)),
             tooltip: 'Make Offer',
-            onPressed: _showOfferModal,
+            onPressed: () => _showOfferModal(provider),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Typing indicator banner
-          if (_isSellerTyping)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-              color: const Color(0xFF6366F1).withOpacity(0.15),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF818CF8)),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    localeProvider.getText('sellerTyping'),
-                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFA5B4FC), fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-
           // Messages list
           Expanded(
             child: ListView.builder(
@@ -237,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 final isOffer = msg['type'] == 'offer';
 
                 if (isOffer) {
-                  return _buildOfferCard(msg, index, localeProvider);
+                  return _buildOfferCard(msg, index, localeProvider, provider);
                 }
 
                 return Align(
@@ -247,26 +276,31 @@ class _ChatScreenState extends State<ChatScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     constraints: const BoxConstraints(maxWidth: 280),
                     decoration: BoxDecoration(
-                      color: isMe ? const Color(0xFF6366F1) : const Color(0xFF1E293B),
+                      color: isMe ? const Color(0xFF6366F1) : provider.cardBg,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
                         bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
                         bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
                       ),
-                      border: isMe ? null : Border.all(color: const Color(0xFF334155)),
+                      border: isMe ? null : Border.all(color: provider.cardBorder),
                     ),
                     child: Column(
                       crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                       children: [
                         Text(
+                          msg['sender'] ?? (isMe ? 'You' : 'Support'),
+                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: isMe ? Colors.indigo.shade100 : const Color(0xFF818CF8)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
                           msg['text'],
-                          style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+                          style: GoogleFonts.inter(fontSize: 13, color: isMe ? Colors.white : provider.textColor),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           msg['time'],
-                          style: GoogleFonts.inter(fontSize: 9, color: Colors.white.withOpacity(0.6)),
+                          style: GoogleFonts.inter(fontSize: 9, color: isMe ? Colors.white.withOpacity(0.7) : provider.subtextColor),
                         ),
                       ],
                     ),
@@ -293,25 +327,25 @@ class _ChatScreenState extends State<ChatScreen> {
           // Input Bar
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Color(0xFF1E293B),
-              border: Border(top: BorderSide(color: Color(0xFF334155))),
+            decoration: BoxDecoration(
+              color: provider.cardBg,
+              border: Border(top: BorderSide(color: provider.cardBorder)),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _msgController,
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                    style: GoogleFonts.inter(color: provider.textColor, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Type message...',
-                      hintStyle: GoogleFonts.inter(color: const Color(0xFF9CA3AF), fontSize: 13),
+                      hintStyle: GoogleFonts.inter(color: provider.subtextColor, fontSize: 13),
                       filled: true,
-                      fillColor: const Color(0xFF0F172A),
+                      fillColor: provider.inputBg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF334155)),
+                        borderSide: BorderSide(color: provider.cardBorder),
                       ),
                     ),
                   ),
@@ -329,7 +363,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildOfferCard(Map<String, dynamic> msg, int index, LocaleProvider localeProvider) {
+  Widget _buildOfferCard(Map<String, dynamic> msg, int index, LocaleProvider localeProvider, AppProvider provider) {
     final status = msg['status'] ?? 'pending';
     final price = msg['offerPrice'] ?? widget.itemPrice;
     final isMe = msg['isMe'] == true;
@@ -338,7 +372,7 @@ class _ChatScreenState extends State<ChatScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: provider.cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF818CF8)),
       ),
@@ -349,10 +383,10 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
-                  Icon(LucideIcons.tag, size: 16, color: Color(0xFFF59E0B)),
-                  SizedBox(width: 6),
-                  Text('Price Offer Negotiation', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                children: [
+                  const Icon(LucideIcons.tag, size: 16, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 6),
+                  Text('Price Offer Negotiation', style: TextStyle(color: provider.textColor, fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
               Container(
@@ -413,7 +447,7 @@ class _ChatScreenState extends State<ChatScreen> {
         side: const BorderSide(color: Color(0xFF6366F1)),
         label: Text(
           '⚡ $text',
-          style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFFA5B4FC), fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6366F1), fontWeight: FontWeight.w600),
         ),
         onPressed: () => _sendMessage(text),
       ),

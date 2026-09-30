@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Edit3, Trash2, Package, Tag, CheckCircle2, AlertCircle, X, Image as ImageIcon, DollarSign, Layers, Upload } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function ItemManagement() {
   const [items, setItems] = useState([]);
@@ -178,16 +179,34 @@ export default function ItemManagement() {
   };
 
   const handleDeleteItem = async (id) => {
-    if (window.confirm('Are you sure you want to remove this item from the store?')) {
-      const updatedList = items.filter(it => it._id !== id && String(it._id) !== String(id));
-      setItems(updatedList);
-      try {
-        localStorage.setItem('admin_store_items', JSON.stringify(updatedList));
-      } catch (e) {}
-      try {
-        await fetch(`http://localhost:5000/api/admin/items/${id}`, { method: 'DELETE' });
-      } catch (e) {}
-    }
+    const result = await Swal.fire({
+      title: 'Remove Item?',
+      text: 'Are you sure you want to remove this item from the store?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Remove Item!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const updatedList = items.filter(it => it._id !== id && String(it._id) !== String(id));
+    setItems(updatedList);
+    try {
+      localStorage.setItem('admin_store_items', JSON.stringify(updatedList));
+    } catch (e) {}
+    try {
+      await fetch(`http://localhost:5000/api/admin/items/${id}`, { method: 'DELETE' });
+      Swal.fire({
+        icon: 'success',
+        title: 'Item Removed!',
+        text: 'Item has been deleted from store inventory.',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } catch (e) {}
   };
 
   const safeItems = Array.isArray(items) ? items : [];

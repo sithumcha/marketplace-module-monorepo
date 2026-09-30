@@ -24,6 +24,32 @@ class ApiService {
     return [];
   }
 
+  /// Authenticates a user via Express Backend API
+  static Future<Map<String, dynamic>> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'password': password,
+        }),
+      ).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        final err = json.decode(response.body);
+        return {'success': false, 'message': err['message'] ?? 'Login failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   /// Registers a user in the MongoDB database via Express Backend API
   static Future<Map<String, dynamic>> registerUser({
     required String name,
@@ -182,4 +208,128 @@ class ApiService {
     }
     return [];
   }
+
+  static String authToken = '';
+
+  static Map<String, String> get headers => {
+    'Content-Type': 'application/json',
+    if (authToken.isNotEmpty) 'Authorization': 'Bearer $authToken',
+  };
+
+  /// Merges local guest cart items with user's MongoDB database cart
+  static Future<List<Map<String, dynamic>>> mergeCartToDb(String userEmail, List<Map<String, dynamic>> localCartItems) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/cart/merge'),
+        headers: headers,
+        body: json.encode({
+          'userEmail': userEmail,
+          'localCart': localCartItems,
+        }),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['cart'] != null) {
+          final List list = data['cart'];
+          debugPrint('🔀 Guest cart merged in MongoDB: ${list.length} items');
+          return list.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error merging guest cart in MongoDB: $e');
+    }
+    return [];
+  }
+
+  /// Fetches wishlist/favorites from MongoDB database for specific user
+  static Future<List<String>> fetchWishlistFromDb(String userEmail) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/wishlist?email=${Uri.encodeComponent(userEmail)}'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['favorites'] != null) {
+          final List list = data['favorites'];
+          return list.map((e) => e.toString()).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching wishlist from MongoDB: $e');
+    }
+    return [];
+  }
+
+  /// Toggles wishlist favorite item in MongoDB database
+  static Future<List<String>> toggleWishlistInDb(String userEmail, String listingId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/wishlist/toggle'),
+        headers: headers,
+        body: json.encode({
+          'email': userEmail,
+          'listingId': listingId,
+        }),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['favorites'] != null) {
+          final List list = data['favorites'];
+          return list.map((e) => e.toString()).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error toggling wishlist in MongoDB: $e');
+    }
+    return [];
+  }
+  static Future<bool> saveAddressesToDb(String email, List<Map<String, String>> addresses) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/addresses'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'addresses': addresses}),
+      ).timeout(const Duration(seconds: 4));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error saving addresses to MongoDB: $e');
+    }
+    return false;
+  }
+
+  /// Saves bank payout details to MongoDB database
+  static Future<bool> saveBankPayoutToDb(String email, Map<String, String> bankDetails) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/bank-payout'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'bankPayoutDetails': bankDetails}),
+      ).timeout(const Duration(seconds: 4));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error saving bank payout to MongoDB: $e');
+    }
+    return false;
+  }
+
+  /// Fetches active promo codes from Express/MongoDB Backend API
+  static Future<List<Map<String, dynamic>>> fetchPromoCodes() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/promos')).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['promos'] != null) {
+          final List list = data['promos'];
+          return list.cast<Map<String, dynamic>>();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching promos: $e');
+    }
+    return [];
+  }
 }
+
+
+

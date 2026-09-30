@@ -12,10 +12,12 @@ import Analytics from './pages/Analytics';
 
 import ItemManagement from './pages/ItemManagement';
 import Orders from './pages/Orders';
+import SupportChat from './pages/SupportChat';
+import PromoCodes from './pages/PromoCodes';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('orders');
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalListings: 0,
@@ -44,7 +46,9 @@ export default function App() {
   const titleMap = {
     dashboard: 'Dashboard Overview',
     orders: 'Customer Orders & Sales Queue',
+    promos: 'Admin Promo & Discount Codes Manager',
     inventory: 'Store Inventory & Product Management',
+    support: 'Live Customer Support & Multi-Device Chat',
     listings: 'Listing Moderation Queue',
     businesses: 'Business Verification Queue',
     users: 'User Account Management',
@@ -62,7 +66,9 @@ export default function App() {
       <main style={{ marginLeft: '260px', padding: '32px' }}>
         {activeTab === 'dashboard' && <Dashboard stats={stats} onNavigate={setActiveTab} />}
         {activeTab === 'orders' && <Orders />}
+        {activeTab === 'promos' && <PromoCodes />}
         {activeTab === 'inventory' && <ItemManagement />}
+        {activeTab === 'support' && <SupportChat />}
         {activeTab === 'listings' && <ListingModeration />}
         {activeTab === 'businesses' && <BusinessVerification />}
         {activeTab === 'users' && <Users />}

@@ -13,8 +13,8 @@ class CartScreen extends StatelessWidget {
     final provider = Provider.of<AppProvider>(context);
     final cartItems = provider.cartItems;
     final double subtotal = provider.cartSubtotal;
-    final double shipping = cartItems.isNotEmpty ? 5.00 : 0.00;
-    final double discount = cartItems.isNotEmpty ? 10.00 : 0.00;
+    final double shipping = cartItems.isNotEmpty ? 500.00 : 0.00; // LKR 500 standard shipping
+    final double discount = 0.00; // 0.00 by default (applied via promo code in checkout)
     final double grandTotal = (subtotal + shipping - discount).clamp(0.0, double.infinity);
 
     return Scaffold(
@@ -23,12 +23,12 @@ class CartScreen extends StatelessWidget {
         backgroundColor: provider.cardBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: provider.textColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Shopping Cart (${provider.cartCount})',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor),
         ),
         centerTitle: true,
         actions: [
@@ -40,14 +40,14 @@ class CartScreen extends StatelessWidget {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    backgroundColor: const Color(0xFF1E293B),
+                    backgroundColor: provider.cardBg,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    title: Text('Clear Shopping Cart?', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
-                    content: Text('Are you sure you want to remove all items from your cart?', style: GoogleFonts.inter(color: const Color(0xFF9CA3AF), fontSize: 13)),
+                    title: Text('Clear Shopping Cart?', style: GoogleFonts.inter(color: provider.textColor, fontWeight: FontWeight.bold)),
+                    content: Text('Are you sure you want to remove all items from your cart?', style: GoogleFonts.inter(color: provider.subtextColor, fontSize: 13)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF9CA3AF))),
+                        child: Text('Cancel', style: GoogleFonts.inter(color: provider.subtextColor)),
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
@@ -82,13 +82,13 @@ class CartScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Text(
                       'Your Cart is Empty',
-                      style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: provider.textColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Explore our store catalog and add items to your cart to begin fast checkout.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF), height: 1.4),
+                      style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor, height: 1.4),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
@@ -145,11 +145,11 @@ class CartScreen extends StatelessWidget {
                                       item.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '\$${item.price.toStringAsFixed(0)} each',
+                                      'LKR ${item.price.toStringAsFixed(2)} each',
                                       style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF34D399), fontWeight: FontWeight.w700),
                                     ),
                                     const SizedBox(height: 8),
@@ -159,29 +159,29 @@ class CartScreen extends StatelessWidget {
                                         // Quantity Control Box
                                         Container(
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF0F172A),
+                                            color: provider.chipBg,
                                             borderRadius: BorderRadius.circular(8),
-                                            border: Border.all(color: const Color(0xFF334155)),
+                                            border: Border.all(color: provider.cardBorder),
                                           ),
                                           child: Row(
                                             children: [
                                               IconButton(
                                                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                                 padding: EdgeInsets.zero,
-                                                icon: const Icon(LucideIcons.minus, size: 14, color: Colors.white),
+                                                icon: Icon(LucideIcons.minus, size: 14, color: provider.textColor),
                                                 onPressed: () => provider.updateCartQuantity(item.id, cartItem.quantity - 1),
                                               ),
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6),
                                                 child: Text(
                                                   '${cartItem.quantity}',
-                                                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                                                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor),
                                                 ),
                                               ),
                                               IconButton(
                                                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                                 padding: EdgeInsets.zero,
-                                                icon: const Icon(LucideIcons.plus, size: 14, color: Colors.white),
+                                                icon: Icon(LucideIcons.plus, size: 14, color: provider.textColor),
                                                 onPressed: () => provider.updateCartQuantity(item.id, cartItem.quantity + 1),
                                               ),
                                             ],
@@ -189,8 +189,8 @@ class CartScreen extends StatelessWidget {
                                         ),
 
                                         Text(
-                                          '\$${cartItem.totalPrice.toStringAsFixed(2)}',
-                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
+                                          'LKR ${cartItem.totalPrice.toStringAsFixed(2)}',
+                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: provider.textColor),
                                         ),
                                       ],
                                     ),
@@ -199,7 +199,7 @@ class CartScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               IconButton(
-                                icon: const Icon(LucideIcons.x, color: Color(0xFF9CA3AF), size: 18),
+                                icon: Icon(LucideIcons.x, color: provider.subtextColor, size: 18),
                                 onPressed: () => provider.removeFromCart(item.id),
                               ),
                             ],
@@ -222,16 +222,16 @@ class CartScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Subtotal', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF))),
-                            Text('\$${subtotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Text('Subtotal', style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor)),
+                            Text('LKR ${subtotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
                           ],
                         ),
                         const SizedBox(height: 6),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Shipping Fee', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF))),
-                            Text('\$${shipping.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Text('Shipping Fee', style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor)),
+                            Text('LKR ${shipping.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: provider.textColor)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -239,12 +239,12 @@ class CartScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Promo Discount', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF10B981))),
-                            Text('-\$${discount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                            Text('-LKR ${discount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Divider(height: 1, color: Color(0xFF334155)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1, color: provider.cardBorder),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,16 +252,16 @@ class CartScreen extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Total Amount', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                                Text('Total Amount', style: GoogleFonts.inter(fontSize: 11, color: provider.subtextColor)),
                                 Text(
-                                  '\$${grandTotal.toStringAsFixed(2)}',
-                                  style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF34D399)),
+                                  'LKR ${grandTotal.toStringAsFixed(2)}',
+                                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF34D399)),
                                 ),
                               ],
                             ),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.only(left: 20),
+                                padding: const EdgeInsets.only(left: 16),
                                 child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF10B981),

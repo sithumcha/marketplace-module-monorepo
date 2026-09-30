@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_item.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class AppProvider extends ChangeNotifier {
   List<Listing> _listings = [];
@@ -18,19 +19,167 @@ class AppProvider extends ChangeNotifier {
   final List<CartItem> _cartItems = [];
 
   // User Auth & Profile State
-  bool _isLoggedIn = true;
-  String _userName = 'Sithum Nethsara';
-  String _userEmail = 'sithum@marketplace.lk';
-  String _userPhone = '+94 77 123 4567';
-  String _userAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200';
-  String _userRole = 'Verified Buyer & Seller';
-  double _walletBalance = 1250.00;
+  bool _isLoggedIn = false;
+  String _userName = '';
+  String _userEmail = '';
+  String _userPhone = '';
+  String _userAvatar = '';
+  String _userRole = '';
+  double _walletBalance = 0.0;
 
-  // Dark Glass AMOLED Theme State
+  // Theme Mode State ('amoled', 'dark', 'light')
+  String _themeMode = 'amoled';
   bool _isAmoledMode = true;
+
 
   // User Orders State
   List<Map<String, dynamic>> _userOrders = [];
+
+  // Bank Payout Details State
+  Map<String, String> _bankPayoutDetails = {
+    'bankName': 'Bank of Ceylon (BOC)',
+    'accountHolder': 'Account Holder',
+    'accountNumber': '884920194821',
+    'branch': 'Colombo Super Grade Branch',
+    'swiftCode': 'BCEYLKLX',
+  };
+
+  // Saved Delivery Addresses State
+  List<Map<String, String>> _savedAddresses = [
+    {
+      'id': '1',
+      'label': 'Home Address (Default)',
+      'fullName': 'Delivery Customer',
+      'addressLine': 'No. 45, Galle Road, Colombo 03',
+      'city': 'Colombo',
+      'phone': '+94 77 123 4567',
+    },
+    {
+      'id': '2',
+      'label': 'Office / Business Store',
+      'fullName': 'Marketplace Pro Customer',
+      'addressLine': 'Level 4, Liberty Plaza, Duplication Road',
+      'city': 'Colombo 03',
+      'phone': '+94 11 234 5678',
+    }
+  ];
+
+  Map<String, String> get bankPayoutDetails => _bankPayoutDetails;
+  List<Map<String, String>> get savedAddresses => _savedAddresses;
+
+  void updateBankPayoutDetails({
+    required String bankName,
+    required String accountHolder,
+    required String accountNumber,
+    required String branch,
+    required String swiftCode,
+  }) {
+    _bankPayoutDetails = {
+      'bankName': bankName,
+      'accountHolder': accountHolder,
+      'accountNumber': accountNumber,
+      'branch': branch,
+      'swiftCode': swiftCode,
+    };
+    notifyListeners();
+    _saveBankDetailsToStorage();
+  }
+
+  void addSavedAddress({
+    required String label,
+    required String fullName,
+    required String addressLine,
+    required String city,
+    required String phone,
+  }) {
+    _savedAddresses.insert(0, {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'label': label,
+      'fullName': fullName,
+      'addressLine': addressLine,
+      'city': city,
+      'phone': phone,
+    });
+    notifyListeners();
+    _saveAddressesToStorage();
+  }
+
+  void updateSavedAddress({
+    required String id,
+    required String label,
+    required String fullName,
+    required String addressLine,
+    required String city,
+    required String phone,
+  }) {
+    final index = _savedAddresses.indexWhere((a) => a['id'] == id);
+    if (index != -1) {
+      _savedAddresses[index] = {
+        'id': id,
+        'label': label,
+        'fullName': fullName,
+        'addressLine': addressLine,
+        'city': city,
+        'phone': phone,
+      };
+      notifyListeners();
+      _saveAddressesToStorage();
+    }
+  }
+
+  void removeSavedAddress(String id) {
+    _savedAddresses.removeWhere((a) => a['id'] == id);
+    notifyListeners();
+    _saveAddressesToStorage();
+  }
+
+  Future<void> _saveAddressesToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final strList = _savedAddresses.map((a) => json.encode(a)).toList();
+      await prefs.setStringList('user_saved_addresses', strList);
+      if (_userEmail.isNotEmpty) {
+        await ApiService.saveAddressesToDb(_userEmail, _savedAddresses);
+      }
+    } catch (e) {
+      debugPrint('Error saving addresses: $e');
+    }
+  }
+
+  Future<void> _loadAddressesFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final strList = prefs.getStringList('user_saved_addresses');
+      if (strList != null && strList.isNotEmpty) {
+        _savedAddresses = strList.map((s) => Map<String, String>.from(json.decode(s) as Map)).toList();
+        notifyListeners();
+      }
+    } catch (e) {}
+  }
+
+  Future<void> _saveBankDetailsToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_bank_details', json.encode(_bankPayoutDetails));
+      if (_userEmail.isNotEmpty) {
+        await ApiService.saveBankPayoutToDb(_userEmail, _bankPayoutDetails);
+      }
+    } catch (e) {
+      debugPrint('Error saving bank details: $e');
+    }
+  }
+
+  Future<void> _loadBankDetailsFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedStr = prefs.getString('user_bank_details');
+      if (savedStr != null) {
+        _bankPayoutDetails = Map<String, String>.from(json.decode(savedStr) as Map);
+        notifyListeners();
+      }
+    } catch (e) {}
+  }
+
 
   List<Listing> get listings => _listings;
   Set<String> get favorites => _favorites;
@@ -48,9 +197,13 @@ class AppProvider extends ChangeNotifier {
   int get cartCount => _cartItems.fold(0, (sum, item) => sum + item.quantity);
   double get cartSubtotal => _cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 
+  DateTime? _lastCartMutation;
+  DateTime? _lastWishlistMutation;
+
   bool isInCart(String listingId) => _cartItems.any((item) => item.listing.id == listingId);
 
   void addToCart(Listing item, {int quantity = 1}) {
+    _lastCartMutation = DateTime.now();
     final index = _cartItems.indexWhere((c) => c.listing.id == item.id);
     if (index != -1) {
       _cartItems[index].quantity += quantity;
@@ -62,12 +215,14 @@ class AppProvider extends ChangeNotifier {
   }
 
   void removeFromCart(String listingId) {
+    _lastCartMutation = DateTime.now();
     _cartItems.removeWhere((item) => item.listing.id == listingId);
     notifyListeners();
     _saveCartToStorage();
   }
 
   void updateCartQuantity(String listingId, int quantity) {
+    _lastCartMutation = DateTime.now();
     if (quantity <= 0) {
       removeFromCart(listingId);
       return;
@@ -81,6 +236,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void clearCart() {
+    _lastCartMutation = DateTime.now();
     _cartItems.clear();
     notifyListeners();
     _saveCartToStorage();
@@ -90,18 +246,14 @@ class AppProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       
-      // Store compact, lightweight JSON payload (~100 bytes per item, no quota limit errors)
       final compactCart = _cartItems.map((item) {
-        String cleanImg = item.listing.images.isNotEmpty ? item.listing.images.first : '';
-        if (cleanImg.length > 200 || cleanImg.startsWith('data:image')) {
-          cleanImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
-        }
+        String realImg = item.listing.images.isNotEmpty ? item.listing.images.first : '';
         return json.encode({
           'id': item.listing.id,
           'title': item.listing.title,
           'price': item.listing.price,
           'quantity': item.quantity,
-          'image': cleanImg,
+          'image': realImg,
           'category': item.listing.category,
         });
       }).toList();
@@ -115,9 +267,7 @@ class AppProvider extends ChangeNotifier {
         'itemTitle': item.listing.title,
         'price': item.listing.price,
         'quantity': item.quantity,
-        'image': item.listing.images.isNotEmpty && !item.listing.images.first.startsWith('data:image')
-            ? item.listing.images.first
-            : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200',
+        'image': item.listing.images.isNotEmpty ? item.listing.images.first : '',
       }).toList();
       await ApiService.syncCartToDb(_userEmail, dbPayload);
     } catch (e) {
@@ -127,7 +277,57 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _loadCartFromStorage() async {
     try {
-      // 1. Try loading from local SharedPreferences FIRST (Instant UI restoration)
+      if (_lastCartMutation != null && DateTime.now().difference(_lastCartMutation!).inSeconds < 2) {
+        return;
+      }
+      if (_userEmail.isNotEmpty) {
+        final dbCart = await ApiService.fetchCartFromDb(_userEmail);
+        _cartItems.clear();
+        if (dbCart.isNotEmpty) {
+          for (var item in dbCart) {
+            final String lId = item['listingId'] ?? 'item_cart';
+            final String lTitle = item['itemTitle'] ?? 'Product Item';
+            final double lPrice = (item['price'] is num) ? (item['price'] as num).toDouble() : (double.tryParse(item['price']?.toString() ?? '0') ?? 0.0);
+            final String lImg = (item['image'] != null && item['image'].toString().isNotEmpty)
+                ? item['image'].toString()
+                : (item['images'] != null && (item['images'] as List).isNotEmpty ? item['images'][0].toString() : 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=300&q=80');
+
+            Listing? matchedListing;
+            try {
+              matchedListing = _listings.firstWhere((l) => l.id == lId);
+            } catch (e) {
+              matchedListing = null;
+            }
+
+            final listing = matchedListing ?? Listing(
+              id: lId,
+              title: lTitle,
+              description: 'Verified store item.',
+              category: 'electronics',
+              price: lPrice,
+              stockQuantity: 10,
+              condition: 'Brand New',
+              isNegotiable: true,
+              isStoreItem: true,
+              storeBadge: 'Official Store',
+              images: [lImg],
+              locationAddress: 'Colombo, Sri Lanka',
+              sellerName: 'Official Merchant',
+              sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+              status: 'active',
+            );
+            _cartItems.add(CartItem(listing: listing, quantity: item['quantity'] ?? 1));
+          }
+        }
+        final prefs = await SharedPreferences.getInstance();
+        if (dbCart.isEmpty) {
+          await prefs.remove('user_cart_items');
+        }
+        notifyListeners();
+        return;
+      }
+
+      // Fallback to local SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final savedCart = prefs.getStringList('user_cart_items');
       if (savedCart != null && savedCart.isNotEmpty) {
@@ -137,71 +337,40 @@ class AppProvider extends ChangeNotifier {
             final dynamic decoded = json.decode(str);
             if (decoded is Map) {
               final map = Map<String, dynamic>.from(decoded);
-              
-              final String itemId = map['id'] ?? map['listingId'] ?? (map['listing'] != null ? map['listing']['id'] : null) ?? 'item_cart';
-              final String itemTitle = map['title'] ?? map['itemTitle'] ?? (map['listing'] != null ? map['listing']['title'] : null) ?? 'Product Item';
-              final double itemPrice = (map['price'] is num)
-                  ? (map['price'] as num).toDouble()
-                  : (map['listing'] != null && map['listing']['price'] is num ? (map['listing']['price'] as num).toDouble() : (double.tryParse(map['price']?.toString() ?? '0') ?? 0.0));
+              final String itemId = map['id'] ?? map['listingId'] ?? 'item_cart';
+              final String itemTitle = map['title'] ?? map['itemTitle'] ?? 'Product Item';
+              final double itemPrice = (map['price'] is num) ? (map['price'] as num).toDouble() : 0.0;
               final int itemQty = (map['quantity'] is num) ? (map['quantity'] as num).toInt() : 1;
-              
-              String itemImg = map['image'] ?? (map['images'] != null && (map['images'] as List).isNotEmpty ? map['images'][0] : null) ?? (map['listing'] != null && map['listing']['images'] != null && (map['listing']['images'] as List).isNotEmpty ? map['listing']['images'][0] : null) ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
-              if (itemImg.startsWith('data:image') || itemImg.length > 300) {
-                itemImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300';
+              String itemImg = map['image'] ?? 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=300&q=80';
+
+              Listing? matchedListing;
+              try {
+                matchedListing = _listings.firstWhere((l) => l.id == itemId);
+              } catch (e) {
+                matchedListing = null;
               }
 
-              final listing = Listing(
+              final listing = matchedListing ?? Listing(
                 id: itemId,
                 title: itemTitle,
-                description: 'Saved cart item.',
-                category: map['category'] ?? 'electronics',
+                description: 'Saved store item.',
+                category: 'electronics',
                 price: itemPrice,
                 stockQuantity: 10,
                 condition: 'Brand New',
                 isNegotiable: true,
                 isStoreItem: true,
-                storeBadge: 'Verified Seller',
+                storeBadge: 'Official Store',
                 images: [itemImg],
                 locationAddress: 'Colombo, Sri Lanka',
-                sellerName: 'Official Store',
+                sellerName: 'Official Merchant',
                 sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
                 status: 'active',
               );
 
               _cartItems.add(CartItem(listing: listing, quantity: itemQty));
             }
-          } catch (err) {
-            debugPrint('Error decoding cart item JSON: $err');
-          }
-        }
-        debugPrint('🛒 Restored ${_cartItems.length} items to cart from SharedPreferences!');
-        notifyListeners();
-        return;
-      }
-
-      // 2. Fallback to loading from MongoDB database
-      final dbCart = await ApiService.fetchCartFromDb(_userEmail);
-      if (dbCart.isNotEmpty) {
-        _cartItems.clear();
-        for (var item in dbCart) {
-          final listing = Listing(
-            id: item['listingId'] ?? 'item_cart',
-            title: item['itemTitle'] ?? 'Product Item',
-            description: 'Item stored in MongoDB cart.',
-            category: 'electronics',
-            price: (item['price'] is num) ? (item['price'] as num).toDouble() : (double.tryParse(item['price']?.toString() ?? '0') ?? 0.0),
-            stockQuantity: 10,
-            condition: 'Brand New',
-            isNegotiable: true,
-            isStoreItem: true,
-            storeBadge: 'Verified Seller',
-            images: [item['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300'],
-            locationAddress: 'Colombo, Sri Lanka',
-            sellerName: 'Official Store',
-            sellerAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-            status: 'active',
-          );
-          _cartItems.add(CartItem(listing: listing, quantity: item['quantity'] ?? 1));
+          } catch (err) {}
         }
         notifyListeners();
       }
@@ -254,38 +423,152 @@ class AppProvider extends ChangeNotifier {
   String get userRole => _userRole;
   double get walletBalance => _walletBalance;
 
-  bool get isAmoledMode => _isAmoledMode;
+  String get themeMode => _themeMode;
+  bool get isLightMode => _themeMode == 'light';
+  bool get isDarkMode => _themeMode == 'dark';
+  bool get isAmoledMode => _themeMode == 'amoled';
 
   // Dynamic Theme Color Getters
-  Color get scaffoldBg => _isAmoledMode ? const Color(0xFF000000) : const Color(0xFF0F172A);
-  Color get cardBg => _isAmoledMode ? const Color(0xFF0A0F1D) : const Color(0xFF1E293B);
-  Color get cardBorder => _isAmoledMode ? const Color(0xFF1E293B) : const Color(0xFF334155);
-  Color get navBg => _isAmoledMode ? const Color(0xFF050505) : const Color(0xFF1E293B);
+  Color get scaffoldBg {
+    if (_themeMode == 'light') return const Color(0xFFF1F5F9);
+    if (_themeMode == 'dark') return const Color(0xFF0F172A);
+    return const Color(0xFF000000); // amoled
+  }
+
+  Color get cardBg {
+    if (_themeMode == 'light') return const Color(0xFFFFFFFF);
+    if (_themeMode == 'dark') return const Color(0xFF1E293B);
+    return const Color(0xFF0A0F1D); // amoled
+  }
+
+  Color get cardBorder {
+    if (_themeMode == 'light') return const Color(0xFFE2E8F0);
+    if (_themeMode == 'dark') return const Color(0xFF334155);
+    return const Color(0xFF1E293B); // amoled
+  }
+
+  Color get navBg {
+    if (_themeMode == 'light') return const Color(0xFFFFFFFF);
+    if (_themeMode == 'dark') return const Color(0xFF1E293B);
+    return const Color(0xFF050505); // amoled
+  }
+
+  Color get textColor {
+    if (_themeMode == 'light') return const Color(0xFF0F172A);
+    return const Color(0xFFFFFFFF); // dark & amoled
+  }
+
+  Color get subtextColor {
+    if (_themeMode == 'light') return const Color(0xFF64748B);
+    return const Color(0xFF9CA3AF); // dark & amoled
+  }
+
+  Color get inputBg {
+    if (_themeMode == 'light') return const Color(0xFFF8FAFC);
+    return const Color(0xFF0F172A); // dark & amoled
+  }
+
+  Color get chipBg {
+    if (_themeMode == 'light') return const Color(0xFFE2E8F0);
+    return const Color(0xFF1E293B); // dark & amoled
+  }
+
 
   List<Listing> get filteredListings {
     if (_selectedCategory == 'All') return _listings;
     return _listings.where((l) => l.category.toLowerCase() == _selectedCategory.toLowerCase()).toList();
   }
 
+  IO.Socket? _socket;
+
   AppProvider() {
+    _loadThemeMode();
+    _loadSavedUser();
+    _loadAddressesFromStorage();
+    _loadBankDetailsFromStorage();
     loadStoreItems();
     _loadSavedFavorites();
     _loadCartFromStorage();
     loadUserOrders();
     _startAutoRefresh();
+    _initSocket();
+  }
+
+  Future<void> _saveUserToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('user_is_logged_in', _isLoggedIn);
+      await prefs.setString('user_name', _userName);
+      await prefs.setString('user_email', _userEmail);
+      await prefs.setString('user_phone', _userPhone);
+      await prefs.setString('user_avatar', _userAvatar);
+      await prefs.setString('user_role', _userRole);
+      await prefs.setString('user_token', ApiService.authToken);
+    } catch (e) {
+      debugPrint('Error saving user state: $e');
+    }
+  }
+
+  Future<void> _loadSavedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('user_is_logged_in') ?? false;
+      if (isLoggedIn) {
+        _isLoggedIn = true;
+        _userName = prefs.getString('user_name') ?? 'User';
+        _userEmail = prefs.getString('user_email') ?? '';
+        _userPhone = prefs.getString('user_phone') ?? '';
+        _userAvatar = prefs.getString('user_avatar') ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200';
+        _userRole = prefs.getString('user_role') ?? 'Verified Buyer';
+        ApiService.authToken = prefs.getString('user_token') ?? '';
+        if (_userName.isNotEmpty) {
+          _bankPayoutDetails['accountHolder'] = _userName;
+          for (var addr in _savedAddresses) {
+            addr['fullName'] = _userName;
+            if (_userPhone.isNotEmpty) addr['phone'] = _userPhone;
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading saved user state: $e');
+    }
+  }
+
+  void _initSocket() {
+    try {
+      _socket = IO.io('http://localhost:5000', IO.OptionBuilder()
+        .setTransports(['websocket', 'polling'])
+        .enableAutoConnect()
+        .build());
+
+      _socket?.on('cart_updated', (data) {
+        if (data != null && data['userEmail'] == _userEmail) {
+          if (_lastCartMutation == null || DateTime.now().difference(_lastCartMutation!).inSeconds >= 2) {
+            _loadCartFromStorage();
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint('Error initializing socket in AppProvider: $e');
+    }
   }
 
   void _startAutoRefresh() {
     _autoRefreshTimer?.cancel();
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       loadStoreItems(silent: true);
       loadUserOrders(silent: true);
+      _loadSavedFavorites();
+      _loadCartFromStorage();
     });
   }
 
   @override
   void dispose() {
     _autoRefreshTimer?.cancel();
+    _socket?.disconnect();
+    _socket?.dispose();
     super.dispose();
   }
 
@@ -297,13 +580,13 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _loadSavedFavorites() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getStringList('user_favorites');
-      if (saved != null) {
-        _favorites.clear();
-        _favorites.addAll(saved);
-        notifyListeners();
+      if (_lastWishlistMutation != null && DateTime.now().difference(_lastWishlistMutation!).inSeconds < 4) {
+        return;
       }
+      final dbFavs = await ApiService.fetchWishlistFromDb(_userEmail);
+      _favorites.clear();
+      _favorites.addAll(dbFavs);
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading saved favorites: $e');
     }
@@ -333,6 +616,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> toggleFavorite(String id) async {
+    _lastWishlistMutation = DateTime.now();
     if (_favorites.contains(id)) {
       _favorites.remove(id);
     } else {
@@ -343,6 +627,14 @@ class AppProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('user_favorites', _favorites.toList());
+      
+      // Persist directly to MongoDB wishlist API
+      final updatedDbFavs = await ApiService.toggleWishlistInDb(_userEmail, id);
+      if (updatedDbFavs.isNotEmpty) {
+        _favorites.clear();
+        _favorites.addAll(updatedDbFavs);
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('Error saving favorites: $e');
     }
@@ -351,11 +643,43 @@ class AppProvider extends ChangeNotifier {
   bool isFavorite(String id) => _favorites.contains(id);
   Set<String> get favoriteIds => _favorites;
 
-  // AMOLED Mode Switch
-  void toggleAmoledMode(bool value) {
-    _isAmoledMode = value;
-    notifyListeners();
+  // Theme Mode Switcher & Persistence
+  void setThemeMode(String mode) {
+    if (mode == 'light' || mode == 'dark' || mode == 'amoled') {
+      _themeMode = mode;
+      _isAmoledMode = (mode == 'amoled');
+      notifyListeners();
+      _saveThemeMode();
+    }
   }
+
+  void toggleAmoledMode(bool value) {
+    setThemeMode(value ? 'amoled' : 'light');
+  }
+
+  Future<void> _saveThemeMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app_theme_mode', _themeMode);
+    } catch (e) {
+      debugPrint('Error saving theme mode: $e');
+    }
+  }
+
+  Future<void> _loadThemeMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('app_theme_mode');
+      if (saved != null && (saved == 'light' || saved == 'dark' || saved == 'amoled')) {
+        _themeMode = saved;
+        _isAmoledMode = (saved == 'amoled');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading theme mode: $e');
+    }
+  }
+
 
   // Stock Deduction Method
   void decreaseStock(String listingId, int quantity) async {
@@ -390,16 +714,74 @@ class AppProvider extends ChangeNotifier {
   }
 
   // User Profile & Authentication Methods
-  void logout() {
+  void logout() async {
     _isLoggedIn = false;
+    _userName = '';
+    _userEmail = '';
+    _userPhone = '';
+    _userAvatar = '';
+    _userRole = '';
+    ApiService.authToken = '';
+    _cartItems.clear();
+    _favorites.clear();
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_cart_items');
+      await prefs.remove('user_favorites');
+      await prefs.remove('user_saved_addresses');
+      await prefs.remove('user_bank_details');
+      await prefs.remove('user_is_logged_in');
+      await prefs.remove('user_name');
+      await prefs.remove('user_email');
+      await prefs.remove('user_phone');
+      await prefs.remove('user_avatar');
+      await prefs.remove('user_role');
+      await prefs.remove('user_token');
+    } catch (e) {}
   }
 
-  void login({String? name, String? email}) {
+  void login({String? name, String? email, String? phone, String? avatar, String? role, String? token}) async {
     _isLoggedIn = true;
     if (name != null && name.isNotEmpty) _userName = name;
     if (email != null && email.isNotEmpty) _userEmail = email;
+    if (phone != null && phone.isNotEmpty) _userPhone = phone;
+    if (avatar != null && avatar.isNotEmpty) _userAvatar = avatar;
+    if (role != null && role.isNotEmpty) _userRole = role;
+    if (_userAvatar.isEmpty) {
+      _userAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200';
+    }
+    if (_userRole.isEmpty) {
+      _userRole = 'Verified Buyer';
+    }
+    if (token != null && token.isNotEmpty) ApiService.authToken = token;
+    if (_userName.isNotEmpty) {
+      _bankPayoutDetails['accountHolder'] = _userName;
+      for (var addr in _savedAddresses) {
+        addr['fullName'] = _userName;
+        if (_userPhone.isNotEmpty) addr['phone'] = _userPhone;
+      }
+    }
     notifyListeners();
+    _saveUserToStorage();
+    
+    // Merge guest local cart with MongoDB database cart upon login
+    if (_cartItems.isNotEmpty) {
+      final localPayload = _cartItems.map((item) => {
+        'listingId': item.listing.id,
+        'itemTitle': item.listing.title,
+        'price': item.listing.price,
+        'quantity': item.quantity,
+        'image': item.listing.images.isNotEmpty ? item.listing.images.first : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300',
+      }).toList();
+      _cartItems.clear();
+      await ApiService.mergeCartToDb(_userEmail, localPayload);
+    }
+
+    // Immediately fetch orders, cart, and wishlist for logged-in user from MongoDB
+    loadUserOrders(silent: false);
+    _loadSavedFavorites();
+    _loadCartFromStorage();
   }
 
   void updateProfile({required String name, required String email, required String phone}) {
@@ -407,12 +789,14 @@ class AppProvider extends ChangeNotifier {
     _userEmail = email;
     _userPhone = phone;
     notifyListeners();
+    _saveUserToStorage();
   }
 
   void updateAvatar(String newAvatarUrl) {
     if (newAvatarUrl.isNotEmpty) {
       _userAvatar = newAvatarUrl;
       notifyListeners();
+      _saveUserToStorage();
     }
   }
 
@@ -438,6 +822,26 @@ class AppProvider extends ChangeNotifier {
       role: role,
     );
 
+    if (result['success'] == true && result['token'] != null) {
+      ApiService.authToken = result['token'];
+    }
+
+    _saveUserToStorage();
+
+    // Merge guest local cart upon registration
+    if (_cartItems.isNotEmpty) {
+      final localPayload = _cartItems.map((item) => {
+        'listingId': item.listing.id,
+        'itemTitle': item.listing.title,
+        'price': item.listing.price,
+        'quantity': item.quantity,
+        'image': item.listing.images.isNotEmpty ? item.listing.images.first : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300',
+      }).toList();
+      await ApiService.mergeCartToDb(_userEmail, localPayload);
+    }
+
+    _loadCartFromStorage();
+    _loadSavedFavorites();
     return result['success'] == true;
   }
 }

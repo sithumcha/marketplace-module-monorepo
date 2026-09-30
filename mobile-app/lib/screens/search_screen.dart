@@ -23,9 +23,10 @@ class _SearchScreenState extends State<SearchScreen> {
   final List<String> _categories = ['All', 'Electronics', 'Fashion', 'Groceries', 'Furniture', 'Vehicles'];
 
   void _openFilterDrawer() {
+    final appProvider = context.read<AppProvider>();
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: appProvider.cardBg,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
@@ -43,10 +44,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Text(
                         localeProvider.getText('filterTitle'),
-                        style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: appProvider.textColor),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
+                        icon: Icon(Icons.close, color: appProvider.textColor),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -56,7 +57,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   // Price Range Slider
                   Text(
                     '${localeProvider.getText('priceRange')}: \$${_priceRange.start.round()} - \$${_priceRange.end.round()}',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: appProvider.textColor, fontSize: 13),
                   ),
                   RangeSlider(
                     values: _priceRange,
@@ -64,7 +65,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     max: 5000,
                     divisions: 50,
                     activeColor: const Color(0xFF6366F1),
-                    inactiveColor: const Color(0xFF334155),
+                    inactiveColor: appProvider.cardBorder,
                     onChanged: (values) {
                       setModalState(() => _priceRange = values);
                       setState(() {});
@@ -75,7 +76,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   // Sort By Selection
                   Text(
                     localeProvider.getText('sortBy'),
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: appProvider.textColor, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -86,8 +87,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         label: Text(option),
                         selected: isSel,
                         selectedColor: const Color(0xFF6366F1),
-                        backgroundColor: const Color(0xFF0F172A),
-                        labelStyle: TextStyle(color: isSel ? Colors.white : const Color(0xFF9CA3AF), fontSize: 12),
+                        backgroundColor: appProvider.chipBg,
+                        labelStyle: TextStyle(color: isSel ? Colors.white : appProvider.subtextColor, fontSize: 12),
                         onSelected: (_) {
                           setModalState(() => _selectedSort = option);
                           setState(() {});
@@ -138,7 +139,7 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         backgroundColor: appProvider.cardBg,
         elevation: 0,
-        title: Text(localeProvider.getText('search'), style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(localeProvider.getText('search'), style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: appProvider.textColor)),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.slidersHorizontal, color: Color(0xFF818CF8)),
@@ -157,15 +158,16 @@ class _SearchScreenState extends State<SearchScreen> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: appProvider.textColor),
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
                         hintText: localeProvider.getText('searchPlaceholder'),
-                        hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+                        hintStyle: TextStyle(color: appProvider.subtextColor, fontSize: 13),
                         prefixIcon: const Icon(LucideIcons.search, color: Color(0xFF6366F1)),
                         filled: true,
                         fillColor: appProvider.cardBg,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: appProvider.cardBorder)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: appProvider.cardBorder)),
                       ),
                     ),
                   ),
@@ -189,8 +191,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       label: Text(cat),
                       selected: isSel,
                       selectedColor: const Color(0xFF6366F1),
-                      backgroundColor: appProvider.cardBg,
-                      labelStyle: TextStyle(color: isSel ? Colors.white : const Color(0xFF9CA3AF), fontSize: 12),
+                      backgroundColor: appProvider.chipBg,
+                      labelStyle: TextStyle(color: isSel ? Colors.white : appProvider.subtextColor, fontSize: 12),
                       onSelected: (_) => setState(() => _selectedCat = cat),
                     ),
                   );
@@ -203,7 +205,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Expanded(
               child: filtered.isEmpty
                   ? Center(
-                      child: Text('No items match your search filters.', style: GoogleFonts.inter(color: const Color(0xFF9CA3AF))),
+                      child: Text('No items match your search filters.', style: GoogleFonts.inter(color: appProvider.subtextColor)),
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
@@ -224,7 +226,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            title: Text(item.title, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+                            title: Text(item.title, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: appProvider.textColor, fontSize: 14)),
                             subtitle: Text('\$${item.price.toStringAsFixed(2)} • ${item.category}', style: const TextStyle(color: Color(0xFF34D399), fontWeight: FontWeight.bold)),
                             trailing: IconButton(
                               icon: const Icon(LucideIcons.shoppingBag, color: Color(0xFF818CF8)),
@@ -245,4 +247,5 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
+
 }

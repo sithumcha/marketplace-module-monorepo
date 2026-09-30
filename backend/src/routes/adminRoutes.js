@@ -9,10 +9,12 @@ const {
   getAdminItems,
   createAdminItem,
   updateAdminItem,
-  deleteAdminItem
+  deleteAdminItem,
+  getUsers
 } = require('../controllers/adminController');
 
 router.get('/dashboard-stats', getDashboardStats);
+router.get('/users', getUsers);
 router.patch('/listings/:listingId/moderate', moderateListing);
 router.patch('/businesses/:businessId/verify', verifyBusiness);
 router.patch('/users/:userId/status', manageUserStatus);

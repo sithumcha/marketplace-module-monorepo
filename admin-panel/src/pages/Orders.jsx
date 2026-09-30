@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Truck, CheckCircle2, XCircle, Clock, MapPin, CreditCard, User } from 'lucide-react';
+import { Package, Truck, CheckCircle2, XCircle, Clock, MapPin, CreditCard, User, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -25,14 +26,76 @@ export default function Orders() {
   const handleUpdateStatus = async (id, newStatus) => {
     setOrders(prev => prev.map(o => o._id === id ? { ...o, status: newStatus } : o));
     try {
-      await fetch(`http://localhost:5000/api/orders/${id}/status`, {
+      const res = await fetch(`http://localhost:5000/api/orders/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated!',
+          text: `Order status updated to "${newStatus}"`,
+          timer: 1800,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      }
       fetchOrders();
     } catch (e) {
-      console.error(e);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to update order status.'
+      });
+    }
+  };
+
+  const handleDeleteOrder = async (id, orderIdStr) => {
+    const targetId = id || orderIdStr;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete order ${orderIdStr || targetId} permanently?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Delete Order!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    setOrders(prev => prev.filter(o => o._id !== targetId && o.orderId !== targetId));
+    try {
+      const res = await fetch(`http://localhost:5000/api/orders/${targetId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted Successfully!',
+          text: `Order ${orderIdStr || targetId} has been removed.`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Delete Failed',
+          text: data.message || 'Could not delete order.'
+        });
+      }
+      fetchOrders();
+    } catch (e) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Server connection failed.'
+      });
     }
   };
 
@@ -44,8 +107,8 @@ export default function Orders() {
     <div className="glass-panel" style={{ padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>Customer Orders & Sales Queue</h2>
-          <p style={{ fontSize: '13px', color: '#9CA3AF' }}>View and process live purchases placed by mobile app shoppers</p>
+          <h2 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-title)' }}>Customer Orders & Sales Queue</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>View, manage, and delete live purchases placed by shoppers</p>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -74,7 +137,7 @@ export default function Orders() {
               document.body.removeChild(link);
             }}
             className="glass-btn"
-            style={{ background: 'rgba(52, 211, 153, 0.2)', color: '#34D399', borderColor: 'rgba(52, 211, 153, 0.4)', fontWeight: 700 }}
+            style={{ background: 'rgba(52, 211, 153, 0.2)', color: '#059669', borderColor: 'rgba(52, 211, 153, 0.4)', fontWeight: 700 }}
           >
             📥 Export CSV Report
           </button>
@@ -85,9 +148,9 @@ export default function Orders() {
               className="glass-btn"
               style={{
                 textTransform: 'capitalize',
-                background: filterStatus === status ? 'var(--primary-gradient)' : 'rgba(255, 255, 255, 0.05)',
-                color: '#fff',
-                borderColor: filterStatus === status ? 'transparent' : 'rgba(255, 255, 255, 0.1)'
+                background: filterStatus === status ? 'var(--primary-gradient)' : 'var(--bg-input)',
+                color: filterStatus === status ? '#fff' : 'var(--text-main)',
+                borderColor: filterStatus === status ? 'transparent' : 'var(--border-color)'
               }}
             >
               {status}
@@ -109,7 +172,7 @@ export default function Orders() {
         </thead>
         <tbody>
           {filtered.map(order => (
-            <tr key={order._id}>
+            <tr key={order._id || order.orderId}>
               <td>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <img
@@ -118,9 +181,9 @@ export default function Orders() {
                     alt={order.itemTitle}
                   />
                   <div>
-                    <div style={{ fontWeight: 700, color: '#fff' }}>{order.itemTitle}</div>
-                    <div style={{ fontSize: '12px', color: '#818CF8', fontWeight: 600 }}>ID: {order.orderId} • Qty: {order.quantity || 1}</div>
-                    <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-title)' }}>{order.itemTitle}</div>
+                    <div style={{ fontSize: '12px', color: '#6366F1', fontWeight: 600 }}>ID: {order.orderId} • Qty: {order.quantity || 1}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'Just Now'}
                     </div>
                   </div>
@@ -128,15 +191,15 @@ export default function Orders() {
               </td>
               <td>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <User size={12} color="#818CF8" /> {order.buyerName || 'Sithum Nethsara'}
+                  <div style={{ fontWeight: 700, color: 'var(--text-title)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <User size={12} color="#6366F1" /> {order.buyerName || 'Customer'}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <MapPin size={11} color="#9CA3AF" /> {order.shippingAddress || 'No. 45, Galle Road, Colombo 03'}
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <MapPin size={11} color="var(--text-muted)" /> {order.shippingAddress || 'No. 45, Galle Road, Colombo 03'}
                   </div>
                 </div>
               </td>
-              <td style={{ fontWeight: 800, color: '#34D399', fontSize: '15px' }}>
+              <td style={{ fontWeight: 800, color: '#059669', fontSize: '15px' }}>
                 ${(order.price || 0).toFixed(2)}
               </td>
               <td>
@@ -153,12 +216,12 @@ export default function Orders() {
               <td>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {order.status === 'Processing' && (
-                    <button className="glass-btn" style={{ background: 'rgba(99, 102, 241, 0.2)', color: '#818CF8' }} onClick={() => handleUpdateStatus(order._id, 'Dispatched')}>
+                    <button className="glass-btn" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366F1' }} onClick={() => handleUpdateStatus(order._id, 'Dispatched')}>
                       <Truck size={14} /> Dispatch
                     </button>
                   )}
                   {order.status === 'Dispatched' && (
-                    <button className="glass-btn" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60A5FA' }} onClick={() => handleUpdateStatus(order._id, 'Out for Delivery')}>
+                    <button className="glass-btn" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6' }} onClick={() => handleUpdateStatus(order._id, 'Out for Delivery')}>
                       <Truck size={14} /> Out for Delivery
                     </button>
                   )}
@@ -167,11 +230,19 @@ export default function Orders() {
                       <CheckCircle2 size={14} /> Deliver
                     </button>
                   )}
-                  {order.status !== 'Cancelled' && (
+                  {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
                     <button className="glass-btn btn-danger" onClick={() => handleUpdateStatus(order._id, 'Cancelled')}>
                       <XCircle size={14} /> Cancel
                     </button>
                   )}
+                  <button 
+                    className="glass-btn btn-danger" 
+                    style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.4)' }} 
+                    onClick={() => handleDeleteOrder(order._id, order.orderId)}
+                    title="Delete order permanently"
+                  >
+                    <Trash2 size={14} /> Delete
+                  </button>
                 </div>
               </td>
             </tr>
@@ -179,9 +250,9 @@ export default function Orders() {
 
           {filtered.length === 0 && (
             <tr>
-              <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
-                <Package size={36} color="#818CF8" style={{ marginBottom: '12px' }} />
-                <div style={{ fontSize: '15px', fontWeight: 700, color: '#fff' }}>No Orders Found Matching Filter "{filterStatus}"</div>
+              <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <Package size={36} color="#6366F1" style={{ marginBottom: '12px' }} />
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-title)' }}>No Orders Found Matching Filter "{filterStatus}"</div>
                 <div style={{ fontSize: '12px', marginTop: '4px' }}>Real customer purchases placed from the mobile app will automatically appear here.</div>
               </td>
             </tr>

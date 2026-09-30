@@ -19,7 +19,7 @@ class ProductDetailScreen extends StatelessWidget {
     final isFav = provider.isFavorite(item.id);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: provider.scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -35,9 +35,9 @@ class ProductDetailScreen extends StatelessWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         height: 260,
-                        color: const Color(0xFF1E293B),
-                        child: const Center(
-                          child: Icon(LucideIcons.package, color: Color(0xFF9CA3AF), size: 48),
+                        color: provider.cardBg,
+                        child: Center(
+                          child: Icon(LucideIcons.package, color: provider.subtextColor, size: 48),
                         ),
                       );
                     },
@@ -163,17 +163,17 @@ class ProductDetailScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       item.title,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor),
                     ),
 
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(LucideIcons.mapPin, size: 14, color: Color(0xFF9CA3AF)),
+                        Icon(LucideIcons.mapPin, size: 14, color: provider.subtextColor),
                         const SizedBox(width: 4),
                         Text(
                           item.locationAddress,
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF)),
+                          style: GoogleFonts.inter(fontSize: 12, color: provider.subtextColor),
                         ),
                       ],
                     ),
@@ -184,9 +184,9 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
+                        color: provider.cardBg,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF334155)),
+                        border: Border.all(color: provider.cardBorder),
                       ),
                       child: Row(
                         children: [
@@ -203,7 +203,7 @@ class ProductDetailScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       item.sellerName,
-                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
                                     ),
                                     const SizedBox(width: 4),
                                     const Icon(LucideIcons.checkCircle2, size: 14, color: Color(0xFF818CF8)),
@@ -218,8 +218,8 @@ class ProductDetailScreen extends StatelessWidget {
                           ),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF334155),
-                              foregroundColor: Colors.white,
+                              backgroundColor: provider.chipBg,
+                              foregroundColor: provider.textColor,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             ),
@@ -241,12 +241,12 @@ class ProductDetailScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Text(
                       'Description & Specifications',
-                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: provider.textColor),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       item.description,
-                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF), height: 1.5),
+                      style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor, height: 1.5),
                     ),
                   ],
                 ),
@@ -256,9 +256,9 @@ class ProductDetailScreen extends StatelessWidget {
             // Bottom Action Bar
             Container(
               padding: const EdgeInsets.all(14),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1E293B),
-                border: Border(top: BorderSide(color: Color(0xFF334155))),
+              decoration: BoxDecoration(
+                color: provider.cardBg,
+                border: Border(top: BorderSide(color: provider.cardBorder)),
               ),
               child: Row(
                 children: [
@@ -333,5 +333,6 @@ class ProductDetailScreen extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

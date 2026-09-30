@@ -4,7 +4,7 @@ import { User, Ban, CheckCircle, Star } from 'lucide-react';
 export default function Users() {
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {
+  const fetchUsers = () => {
     fetch('http://localhost:5000/api/users')
       .then(res => res.json())
       .then(data => {
@@ -13,6 +13,12 @@ export default function Users() {
         }
       })
       .catch(() => setUsers([]));
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    const interval = setInterval(fetchUsers, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleStatus = async (id, newStatus) => {

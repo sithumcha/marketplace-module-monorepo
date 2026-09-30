@@ -154,6 +154,15 @@ const deleteAdminItem = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    return res.json({ success: true, users });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = { 
   getDashboardStats, 
   moderateListing, 
@@ -163,6 +172,8 @@ module.exports = {
   getAdminItems,
   createAdminItem,
   updateAdminItem,
-  deleteAdminItem
+  deleteAdminItem,
+  getUsers
 };
+
 
