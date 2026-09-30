@@ -3,77 +3,50 @@
 ![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green?style=for-the-badge&logo=nodedotjs)
 ![Express.js](https://img.shields.io/badge/Express.js-4.x-black?style=for-the-badge&logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=for-the-badge&logo=mongodb)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![React](https://img.shields.io/badge/React-18%2F19-61DAFB?style=for-the-badge&logo=react)
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter)
 ![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?style=for-the-badge&logo=socketdotio)
+![SweetAlert2](https://img.shields.io/badge/SweetAlert2-Notifications-FF69B4?style=for-the-badge&logo=sweetalert2)
 
-An enterprise-grade, full-stack **Marketplace Application Platform** engineered with a **Dual-Role Flutter Mobile Web App (Buyer & Seller)**, a **React Admin Moderation Dashboard**, and a **Node.js/Express + MongoDB + Socket.io Backend API Service**.
-
----
-
-## 📸 Visual Showcase & UI Highlights
-
-### 📱 1. Dual-Role Mobile Web App (`/mobile-app`)
-Built with Flutter Web featuring AMOLED dark glassmorphism styling, real-time MongoDB item rendering, local cart persistence, and real-time chat.
-
-| 🏠 Home Feed & Store Items | 🛒 Shopping Cart & Checkout |
-| :---: | :---: |
-| ![Mobile Home Feed](screenshots/mobile_home.png) | ![Shopping Cart](screenshots/mobile_cart.png) |
-
-| 👤 User Profile & Wallet |
-| :---: |
-| ![User Profile & Wallet](screenshots/mobile_profile.png) |
+An enterprise-grade, full-stack **Marketplace Monorepo Platform** featuring:
+- **📱 Dual-Role Flutter Mobile Web App (Port 3000)**
+- **🖥️ React Admin Moderation Panel in Crisp Light Mode (Port 3001)**
+- **🌐 React Client Web Storefront (Port 3002)**
+- **⚡ Node.js / Express + MongoDB + Socket.io Backend API (Port 5000)**
 
 ---
 
-### 🖥️ 2. Admin Moderation Web Panel (`/admin-panel`)
-React 18 & Vite dashboard providing platform administrators with real-time KPI overview, CSV sales export, inventory management, and moderation queues.
+## 🌟 Key Recent Enhancements & Features
 
-| 📊 Admin Dashboard Overview | 📦 Customer Orders & Sales Queue |
-| :---: | :---: |
-| ![Admin Dashboard](screenshots/admin_dashboard.png) | ![Customer Orders](screenshots/admin_orders.png) |
+### 1. 🖥️ Admin Panel Light Mode & Order Management (`/admin-panel`)
+- **☀️ Light Mode Default**: Clean, modern high-contrast Light Theme for the entire Admin Moderation Panel with seamless dark mode toggle.
+- **🗑️ Permanent Order Deletion**: Admin can delete orders permanently from MongoDB with interactive SweetAlert2 confirmation dialogs.
+- **🏷️ Promo / Discount Code Manager**: Dynamic management of discount codes (`/api/promos`) allowing creation, real-time editing, active/inactive status toggling, and deletion.
+- **📂 Categories & Taxonomy Sync**: Real-time management of product and business directory categories (`/api/categories`) auto-seeded with default categories (*Electronics*, *Fashion*, *Groceries*, *Furniture*, *Vehicles*, *Business Services*, *Sports*).
+- **📥 CSV Sales Exporter**: Export customer sales queue reports containing buyer name, email, item title, price, status, and shipping address.
 
-| 🛍️ Store Inventory Management | 🛡️ Listing Moderation Queue |
-| :---: | :---: |
-| ![Store Inventory](screenshots/admin_inventory.png) | ![Listing Moderation](screenshots/admin_moderation.png) |
+### 2. 🔔 SweetAlert2 Alert & Toast Notification System
+- Replaced native browser popups with **SweetAlert2** animated modals and toasts across Web and Admin apps.
+- **Warning Modals**: *"Are you sure you want to delete this order / promo / item permanently?"* with confirm & cancel actions.
+- **Success Toasts**: Instant toast notifications when orders are deleted, status updated, or promo codes claimed to clipboard.
+- **Error Popups**: Graceful error feedback for invalid inputs or network failures.
 
-| 🏢 Business Verification Queue |
-| :---: |
-| ![Business Verification](screenshots/admin_verification.png) |
-
----
-
-## 🛠️ Architecture & Technology Stack
-
-| Layer | Technologies & Tools |
-| :--- | :--- |
-| **Mobile Web App** | Flutter 3.x, Dart, Provider (State Management), Google Fonts, Lucide Icons, SharedPreferences JSON Caching |
-| **Admin Panel** | React 18, Vite, CSS Glassmorphism, Lucide React Icons, Native Web Storage |
-| **Backend Service** | Node.js, Express.js, Socket.io (Real-Time Communication), Mongoose (MongoDB ORM), JWT Authentication |
-| **Database** | MongoDB (Geospatial 2dsphere indexing, Mongoose Schema validation) |
+### 3. 🌐 Client Web Storefront & Brand Sync (`/client-web`)
+- **🎨 Brand & Typography Sync**: Integrated Google Font **`Plus Jakarta Sans`** (weights 400–900) matching the mobile app.
+- **🛍️ Logo & Header Design**: HSL gradient logo icon box (`#4F46E5`, `#6366F1`, `#8B5CF6`), extra-bold `MARKETPLACE` title, and green gradient `PRO` badge (`#10B981` to `#0D9488`).
+- **✨ Animated Glassmorphic Hero Slider**: Dynamic auto-slider pulling live admin promo codes from MongoDB (`/api/promos`) with 1-click clipboard copy.
 
 ---
 
-## ✨ Features & Capabilities
+## 🛠️ Monorepo Microservices & Architecture
 
-### 📱 1. Dual-Role Mobile App (`/mobile-app`)
-- **🛍️ Store Listing Feed**: Dynamic category filtering (Electronics, Fashion, Groceries, Furniture, Vehicles, Business Directory), price tags, and store badges.
-- **🛒 Persistent Shopping Cart**: Shopping cart items persist locally across page refreshes and browser restarts via `SharedPreferences` JSON storage & MongoDB synchronization.
-- **➕ 5-Step Seller Listing Wizard**: Interactive multi-step form for creating product listings with live card preview.
-- **💬 Real-Time Chat & Negotiation**: Interactive offer cards (`[Accept]`, `[Reject]`, `[Counter Offer]`) connected via Socket.io.
-- **👤 Profile & Wallet**: Balance tracker, account details, saved favorites, and AMOLED dark theme toggle.
-
-### 🖥️ 2. Admin Moderation Panel (`/admin-panel`)
-- **📊 KPI Dashboard**: Live tracking for Active Listings, Registered Users, Platform GMV, and Pending Orders.
-- **📥 CSV Report Exporter**: Download formatted CSV sales reports containing customer names, order IDs, product titles, pricing, and shipping addresses.
-- **🛍️ Inventory Management**: Live stock count tracking and auto-deduction sync with customer orders.
-- **🛡️ Listing & Review Moderation Queue**: Inspect, approve, flag, or remove reported listings and reviews.
-- **🏢 Business Verification**: Verify business permits and award verified seller status badges.
-
-### ⚙️ 3. Backend API & Real-time Engine (`/backend`)
-- **Mongoose Models**: `User`, `Listing`, `Category`, `Business`, `BusinessReview`, `Chat`, `Message`, `Offer`, `Favorite`, `Report`, `Order`, `Transaction`.
-- **Socket.io Handlers**: Live chat room join/leave events, instant messages, and real-time negotiation offers.
-- **Geospatial & Filters**: MongoDB `$near` 2dsphere proximity search and price/condition query filters.
+| Microservice | Location | Technology | Port |
+| :--- | :--- | :--- | :--- |
+| **Mobile Web App** | `/mobile-app` | Flutter 3.x, Provider, Dart | `3000` |
+| **Admin Panel** | `/admin-panel` | React 18, Vite, SweetAlert2, Light Theme | `3001` |
+| **Client Web App** | `/client-web` | React 19, Vite, Plus Jakarta Sans, SweetAlert2 | `3002` |
+| **Backend API Service** | `/backend` | Node.js, Express, Socket.io, Mongoose | `5000` |
+| **Database** | `/backend` | MongoDB (`localhost:27017`) | `27017` |
 
 ---
 
@@ -81,83 +54,76 @@ React 18 & Vite dashboard providing platform administrators with real-time KPI o
 
 ```
 MARKETPLACE MODULE/
-├── admin-panel/           # React 18 + Vite Admin Moderation Panel
-│   ├── dist/              # Production static web build
-│   └── src/               # React components, pages & CSS
+├── admin-panel/           # React 18 + Vite Admin Panel (Light Mode, Orders, Promos)
+│   ├── dist/              # Production static web bundle
+│   └── src/               # React components, pages & index.css
 ├── backend/               # Node.js + Express + Socket.io Server
-│   └── src/               # Controllers, models, routes, sockets
+│   └── src/               # Controllers, models (PromoCode, Category, Order), routes, sockets
+├── client-web/            # React 19 + Vite Web Storefront
+│   ├── dist/              # Production static web bundle
+│   └── src/               # Navbar, HeroBanner, Cart, Checkout, Profile
 ├── mobile-app/            # Flutter Mobile & Web Client
 │   ├── build/web/         # Production Flutter Web build
-│   └── lib/               # Dart providers, models, screens, services
-├── screenshots/           # Application screenshots for UI documentation
-└── package.json           # Monorepo startup scripts
+│   └── lib/               # Dart screens, models, providers, services
+├── start_all.js           # All-in-one monorepo production launcher script
+└── package.json           # Monorepo dependencies & scripts
 ```
 
 ---
 
-## 🚀 How to Run Locally
+## 🚀 How to Run locally
 
-### 1. Install Dependencies
+### 1. Fast Launch All Services (Recommended)
+Run all 4 microservices simultaneously using the root launcher:
 ```bash
-# Backend dependencies
-cd backend && npm install
-
-# Admin Panel dependencies
-cd ../admin-panel && npm install
-
-# Mobile App dependencies
-cd ../mobile-app && flutter pub get
+node start_all.js
 ```
+This automatically starts:
+- 🚀 **Backend API**: `http://localhost:5000`
+- 🖥️ **Admin Panel**: `http://localhost:3001`
+- 🌐 **Client Web App**: `http://localhost:3002`
+- 📱 **Mobile Web App**: `http://localhost:3000`
 
-### 2. Environment Configuration
-Create a `.env` file inside the `backend/` directory:
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/marketplace_db
-JWT_SECRET=marketplace_secret_jwt_key_2026
-```
+### 2. Manual Service Launch
 
-### 3. Option A: Run via Docker Compose (Recommended)
-Launch all 4 services (MongoDB, Backend, Admin Panel, Mobile Web App) in one single command:
-```bash
-docker-compose up --build
-```
-- **Mobile Web App**: `http://localhost:3000`
-- **Admin Panel**: `http://localhost:3001`
-- **Backend API**: `http://localhost:5000`
-- **MongoDB**: `localhost:27017`
-
-### 4. Option B: Run Services Manually
-
-- **Backend API & Socket Server** (Port 5000):
+- **Backend API Server** (Port 5000):
   ```bash
   cd backend && npm start
   ```
 
-- **Admin Panel Dashboard** (Port 3001):
+- **Admin Panel** (Port 3001):
   ```bash
   cd admin-panel && npm run dev
   ```
 
+- **Client Web App** (Port 3002):
+  ```bash
+  cd client-web && npm run dev
+  ```
+
 - **Mobile Web App** (Port 3000):
   ```bash
-  cd mobile-app
-  flutter build web
-  npx serve -s build/web -l 3000
+  cd mobile-app && flutter run -d web-server --web-port=3000
   ```
 
 ---
 
-## 🔌 API Endpoints Summary
+## 🔌 Key API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/listings` | Fetch active store item listings |
-| `POST` | `/api/listings` | Create a new product listing |
-| `GET` | `/api/orders` | Retrieve user/customer orders |
-| `POST` | `/api/orders` | Create a new customer order and auto-deduct stock |
-| `POST` | `/api/cart/sync` | Persist and synchronize shopping cart payload |
-| `GET` | `/api/admin/dashboard-stats` | Get admin platform KPIs and counters |
+| `GET` | `/api/promos` | Fetch active promo codes for hero banner & checkout |
+| `POST` | `/api/promos` | Create a new promo discount code (Admin) |
+| `PUT` | `/api/promos/:id` | Edit an existing promo discount code (Admin) |
+| `DELETE` | `/api/promos/:id` | Delete a promo discount code (Admin) |
+| `PATCH` | `/api/promos/:id/toggle` | Toggle promo code active/inactive state |
+| `GET` | `/api/categories` | Fetch category taxonomy list (Auto-seeded) |
+| `POST` | `/api/categories` | Add a new product/directory category (Admin) |
+| `DELETE` | `/api/categories/:id` | Delete a category (Admin) |
+| `GET` | `/api/orders` | Fetch customer orders |
+| `POST` | `/api/orders` | Create a new order and auto-deduct stock |
+| `DELETE` | `/api/orders/:id` | Permanently delete an order from MongoDB (Admin) |
+| `PATCH` | `/api/orders/:id/status` | Update order status (Processing, Dispatched, Delivered) |
 
 ---
 
