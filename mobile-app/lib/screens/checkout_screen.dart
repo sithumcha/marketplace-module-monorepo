@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../models/listing.dart';
 import '../providers/app_provider.dart';
+import '../services/invoice_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final Listing item;
@@ -88,7 +89,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     final String orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
-    provider.addOrder({
+    final newOrderMap = {
       'id': orderId,
       'listingId': widget.item.id,
       'itemTitle': widget.item.title,
@@ -100,7 +101,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'status': 'Processing',
       'statusColor': const Color(0xFF3B82F6),
       'date': '${DateTime.now().day.toString().padLeft(2, '0')}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().year}',
-    });
+    };
+
+    provider.addOrder(newOrderMap);
 
     showModalBottomSheet(
       context: context,
@@ -140,22 +143,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor, height: 1.4),
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF6366F1),
+                        side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => InvoiceService.downloadInvoice(context, newOrderMap),
+                      icon: const Icon(LucideIcons.fileText, size: 18),
+                      label: Text('Download Bill', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context); // Close sheet
-                    Navigator.pop(context); // Back to detail
-                  },
-                  child: Text('Done & Continue Shopping', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context); // Close sheet
+                        Navigator.pop(context); // Back to detail
+                      },
+                      child: Text('Done & Continue', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

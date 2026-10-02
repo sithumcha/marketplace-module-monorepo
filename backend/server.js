@@ -19,6 +19,7 @@ const cartRoutes = require('./src/routes/cartRoutes');
 const wishlistRoutes = require('./src/routes/wishlistRoutes');
 const promoRoutes = require('./src/routes/promoRoutes');
 const categoryRoutes = require('./src/routes/categoryRoutes');
+const reviewRoutes = require('./src/routes/reviewRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/promos', promoRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

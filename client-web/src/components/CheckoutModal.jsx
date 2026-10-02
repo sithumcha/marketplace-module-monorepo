@@ -17,8 +17,11 @@ import {
   MapPin,
   Phone,
   Mail,
-  Tag
+  Tag,
+  FileText,
+  Download
 } from 'lucide-react';
+import { downloadOrderInvoice } from '../utils/invoiceGenerator';
 
 export default function CheckoutModal({ 
   isOpen, 
@@ -126,6 +129,11 @@ export default function CheckoutModal({
         orderId: orderGroupId,
         total: grandTotal,
         itemCount: cart.length,
+        items: cart.map(i => ({ title: i.title || i.itemTitle, price: i.price, quantity: i.quantity })),
+        buyerName,
+        buyerEmail,
+        buyerPhone,
+        shippingAddress,
         shippingMethod: shippingOption === 'express' ? 'Express Courier (1-2 Days)' : 'Standard Delivery (3-5 Days)',
         paymentMethod: paymentMethod === 'CARD' ? 'Credit/Debit Card' : (paymentMethod === 'WALLET' ? 'Marketplace Wallet' : 'Cash on Delivery'),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -200,9 +208,18 @@ export default function CheckoutModal({
                 </div>
               </div>
 
-              <button onClick={() => { setCompletedOrder(null); onClose(); }} className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '1rem', borderRadius: '12px' }}>
-                Done & Continue Shopping
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => downloadOrderInvoice(completedOrder)} 
+                  className="btn-secondary" 
+                  style={{ padding: '0.9rem 1.8rem', fontSize: '0.95rem', borderRadius: '12px', border: '2px solid #4f46e5', color: '#4f46e5', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                >
+                  <FileText size={18} /> Download Bill / Invoice
+                </button>
+                <button onClick={() => { setCompletedOrder(null); onClose(); }} className="btn-primary" style={{ padding: '0.9rem 2.5rem', fontSize: '0.95rem', borderRadius: '12px' }}>
+                  Done & Continue Shopping
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmitOrder} style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>

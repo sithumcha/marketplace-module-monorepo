@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanner from './components/HeroBanner';
 import ProductCard from './components/ProductCard';
-import ProductDetailModal from './components/ProductDetailModal';
+import ProductDetailPage from './components/ProductDetailPage';
 import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import WishlistDrawer from './components/WishlistDrawer';
@@ -12,6 +12,7 @@ import OrdersTab from './components/OrdersTab';
 import BusinessDirectoryTab from './components/BusinessDirectoryTab';
 import ProfileTab from './components/ProfileTab';
 import { io } from 'socket.io-client';
+import { MessageSquare } from 'lucide-react';
 
 export default function App() {
   const [listings, setListings] = useState([]);
@@ -118,6 +119,7 @@ export default function App() {
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [itemForOffer, setItemForOffer] = useState(null);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [itemForChat, setItemForChat] = useState(null);
 
   const lastCartMutationRef = React.useRef(0);
   const lastFavMutationRef = React.useRef(0);
@@ -460,7 +462,7 @@ export default function App() {
                     <ProductCard 
                       key={item._id}
                       item={item}
-                      onSelect={(p) => setSelectedProduct(p)}
+                      onSelect={(p) => { setSelectedProduct(p); setActiveTab('product_detail'); }}
                       onAddToCart={handleAddToCart}
                       onOpenOffer={openOfferModal}
                       isFavorite={favorites.includes(item._id)}
@@ -471,6 +473,34 @@ export default function App() {
               )}
             </div>
           </>
+        )}
+
+        {activeTab === 'product_detail' && (
+          <ProductDetailPage
+            item={selectedProduct}
+            user={user}
+            onBack={() => setActiveTab('explore')}
+            onAddToCart={handleAddToCart}
+            onBuyNow={(item) => { handleAddToCart(item); setIsCheckoutOpen(true); }}
+            onOpenOffer={openOfferModal}
+            onOpenChat={(item) => { setItemForChat(item); setIsChatModalOpen(true); }}
+            isFavorite={selectedProduct ? favorites.includes(selectedProduct._id) : false}
+            onToggleFavorite={toggleFavorite}
+            relatedProducts={
+              (() => {
+                const cat = (selectedProduct?.category || '').toLowerCase().trim();
+                const currentId = String(selectedProduct?._id || selectedProduct?.id || '');
+                const inSameCat = listings.filter(l => 
+                  String(l._id || l.id) !== currentId && 
+                  (l.category || '').toLowerCase().trim() === cat
+                );
+                return inSameCat.length > 0 
+                  ? inSameCat 
+                  : listings.filter(l => String(l._id || l.id) !== currentId);
+              })()
+            }
+            onSelectRelated={(p) => { setSelectedProduct(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          />
         )}
 
         {activeTab === 'orders' && (
@@ -495,13 +525,6 @@ export default function App() {
       </main>
 
       {/* Modals & Overlays */}
-      <ProductDetailModal 
-        item={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        onAddToCart={handleAddToCart}
-        onOpenOffer={openOfferModal}
-        onOpenChat={() => setIsChatModalOpen(true)}
-      />
 
       <CartDrawer 
         isOpen={isCartOpen}
@@ -543,8 +566,44 @@ export default function App() {
 
       <ChatModal 
         isOpen={isChatModalOpen}
-        onClose={() => setIsChatModalOpen(false)}
+        onClose={() => { setIsChatModalOpen(false); setItemForChat(null); }}
+        user={user}
+        item={itemForChat}
+        onOpenAuth={() => setActiveTab('profile')}
       />
+
+      {/* Floating Live Support Chat Widget Launcher */}
+      <button
+        onClick={() => setIsChatModalOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
+          color: '#ffffff',
+          border: 'none',
+          borderRadius: '50px',
+          padding: '12px 20px',
+          fontSize: '14px',
+          fontWeight: '800',
+          cursor: 'pointer',
+          boxShadow: '0 8px 24px rgba(99, 102, 241, 0.45)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          zIndex: 9999,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.06)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
+        title="Open Live Support & Product Inquiry Chat"
+      >
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <MessageSquare size={20} color="#fff" />
+          <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', border: '2px solid #fff' }} />
+        </div>
+        <span>Support Chat</span>
+      </button>
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid #e2e8f0', background: '#ffffff', padding: '2rem 1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.88rem' }}>

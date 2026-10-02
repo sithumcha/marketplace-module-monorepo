@@ -66,6 +66,9 @@ class AppProvider extends ChangeNotifier {
 
   Map<String, String> get bankPayoutDetails => _bankPayoutDetails;
   List<Map<String, String>> get savedAddresses => _savedAddresses;
+  bool get isLoggedIn => _isLoggedIn;
+  String get userName => _userName;
+  String get userEmail => _userEmail;
 
   void updateBankPayoutDetails({
     required String bankName,
@@ -415,9 +418,6 @@ class AppProvider extends ChangeNotifier {
     return success;
   }
 
-  bool get isLoggedIn => _isLoggedIn;
-  String get userName => _userName;
-  String get userEmail => _userEmail;
   String get userPhone => _userPhone;
   String get userAvatar => _userAvatar;
   String get userRole => _userRole;

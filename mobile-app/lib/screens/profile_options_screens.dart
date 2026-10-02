@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../models/listing.dart';
 import '../providers/app_provider.dart';
+import '../services/invoice_service.dart';
 import 'product_detail_screen.dart';
 
 // ==========================================
@@ -425,7 +426,32 @@ class OrderHistoryScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('ID: ${ord['id']}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF818CF8))),
+                          Row(
+                            children: [
+                              Text('ID: ${ord['id']}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF818CF8))),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () => InvoiceService.downloadInvoice(context, ord),
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFF10B981), width: 0.8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(LucideIcons.fileText, size: 12, color: Color(0xFF10B981)),
+                                      const SizedBox(width: 4),
+                                      Text('Bill', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(

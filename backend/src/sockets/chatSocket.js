@@ -23,14 +23,23 @@ module.exports = function (io) {
     // Join admin room for real-time moderation and customer support
     socket.on('join_admin', () => {
       socket.join('admin_room');
-      console.log(`Socket ${socket.id} joined admin_room`);
+      socket.join('support_chat');
+      console.log(`Socket ${socket.id} joined admin_room & support_chat`);
     });
 
     // Real-time message broadcast handler
     socket.on('send_message', async (data) => {
       const chatId = data.chatId || 'support_chat';
-      const senderId = data.senderId || data.userId || 'user_demo';
-      const sender = data.sender || (data.isAdmin ? 'Admin Support' : 'You');
+      const senderId = data.senderId || data.userId || data.userEmail || 'user_guest';
+      const targetUserId = data.targetUserId || data.recipientId;
+      const userEmail = data.userEmail || '';
+      
+      // Extract user's display name, ensuring it is passed to admin accurately
+      let senderName = data.senderName || data.userName || data.sender;
+      if (!senderName || senderName === 'You' || senderName === 'Customer User') {
+        senderName = (data.sender && data.sender !== 'You' && data.sender !== 'Customer User') ? data.sender : 'Customer User';
+      }
+      const sender = data.isAdmin ? 'Admin Support' : senderName;
       const text = data.text || '';
       const type = data.type || 'text';
       const offerData = data.offerData || null;
@@ -39,7 +48,12 @@ module.exports = function (io) {
         id: data.id || Date.now(),
         chatId,
         senderId,
+        targetUserId,
+        userEmail,
         sender,
+        senderName: sender,
+        userName: sender,
+        device: data.device || 'Web Client',
         text,
         type,
         offerData,
@@ -50,32 +64,41 @@ module.exports = function (io) {
 
       console.log(`💬 [Socket] Message from ${sender} (${senderId}): "${text}"`);
 
-      // 1. Broadcast to specific chat room & user room
-      io.to(chatId).to(`chat_${chatId}`).to(`user_${senderId}`).emit('receive_message', messagePayload);
-      io.to(chatId).to(`chat_${chatId}`).to(`user_${senderId}`).emit('chat_message', messagePayload);
+      // Broadcast to Admin and User rooms cleanly ONCE
+      io.to('admin_room').to(chatId).to(`chat_${chatId}`).to(`user_${senderId}`).emit('receive_message', messagePayload);
 
-      // 2. Broadcast to Admin Moderation Room
-      io.to('admin_room').emit('receive_message', messagePayload);
-      io.to('admin_room').emit('chat_message', messagePayload);
-      io.to('admin_room').emit('admin_new_message', messagePayload);
-
-      // 3. Global socket broadcast fallback (Guarantees Admin & Users get the message even if room joining failed)
-      io.emit('receive_message', messagePayload);
-      io.emit('chat_message', messagePayload);
-
-      // Save message in database asynchronously
+      // Save message in database asynchronously if not duplicate
       try {
         if (Message && Message.create) {
-          await Message.create({
-            chatId: String(chatId),
-            senderId: String(senderId),
-            sender: String(sender),
-            isAdmin: Boolean(data.isAdmin),
-            type,
-            text,
-            offerData
+          const textToSave = text || '';
+          const sId = String(senderId);
+
+          const searchConditions = [{ senderId: sId }];
+          if (userEmail) searchConditions.push({ userEmail: String(userEmail) });
+
+          const recentDuplicate = await Message.findOne({
+            $or: searchConditions,
+            text: textToSave,
+            createdAt: { $gte: new Date(Date.now() - 5000) }
           });
-          console.log(`✅ Chat message saved to MongoDB for chatId: ${chatId}`);
+
+          if (!recentDuplicate) {
+            await Message.create({
+              chatId: String(chatId),
+              senderId: sId,
+              targetUserId: targetUserId ? String(targetUserId) : null,
+              userEmail: userEmail ? String(userEmail) : null,
+              sender: String(sender),
+              senderName: String(sender),
+              isAdmin: Boolean(data.isAdmin),
+              type,
+              text: textToSave,
+              offerData
+            });
+            console.log(`✅ Chat message saved to MongoDB for chatId: ${chatId} with sender: ${sender}`);
+          } else {
+            console.log(`ℹ️ Skipped duplicate DB save for socket message from: ${sender}`);
+          }
         }
       } catch (err) {
         console.warn('DB message save skipped:', err.message);
@@ -85,9 +108,7 @@ module.exports = function (io) {
     // Handle direct chat_message event
     socket.on('chat_message', (data) => {
       const payload = typeof data === 'string' ? { text: data, sender: 'User', id: Date.now() } : data;
-      io.emit('chat_message', payload);
       io.emit('receive_message', payload);
-      io.to('admin_room').emit('admin_new_message', payload);
     });
 
     // Real-time offer response

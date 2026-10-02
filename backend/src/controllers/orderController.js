@@ -46,6 +46,10 @@ const createOrder = async (req, res) => {
       console.error('⚠️ Could not update stock:', stockErr.message);
     }
 
+    // Send automated order receipt email
+    const { sendOrderReceiptEmail } = require('../services/emailService');
+    sendOrderReceiptEmail(newOrder);
+
     console.log('✅ New MongoDB Order Created:', newOrder.orderId, newOrder.itemTitle);
     return res.status(201).json({ success: true, order: newOrder });
   } catch (err) {
@@ -152,10 +156,100 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+const getOrderInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mongoose = require('mongoose');
+    let order;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({ orderId: id });
+    }
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order invoice not found' });
+    }
+
+    const invoiceData = {
+      invoiceNo: order.orderId,
+      issueDate: order.createdAt || new Date(),
+      status: order.status,
+      buyer: {
+        name: order.buyerName,
+        email: order.buyerEmail,
+        address: order.shippingAddress
+      },
+      payment: {
+        method: order.paymentMethod,
+        currency: 'LKR'
+      },
+      items: [
+        {
+          title: order.itemTitle,
+          quantity: order.quantity || 1,
+          unitPrice: order.price,
+          totalPrice: order.price * (order.quantity || 1)
+        }
+      ],
+      subtotal: order.price * (order.quantity || 1),
+      shippingFee: 500,
+      grandTotal: (order.price * (order.quantity || 1)) + 500
+    };
+
+const getOrderTracking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mongoose = require('mongoose');
+    let order;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id);
+    }
+    if (!order) {
+      order = await Order.findOne({ orderId: id });
+    }
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Dynamic Live Tracking Status & Map Checkpoints
+    const status = order.status || 'Processing';
+    const trackingInfo = {
+      orderId: order.orderId,
+      status,
+      courier: 'Marketplace Express Logistics',
+      driverName: 'Kamal Perera',
+      driverPhone: '+94 71 889 2200',
+      vehicleNo: 'WP CAD-4521',
+      estimatedDelivery: 'Tomorrow by 4:00 PM',
+      currentLocationName: status === 'Delivered' ? 'Delivered to Customer' : status === 'Dispatched' ? 'In Transit - Kandy Road Hub' : 'Sorting Facility - Colombo 03',
+      coordinates: {
+        lat: 6.9271,
+        lng: 79.8612
+      },
+      checkpoints: [
+        { title: 'Order Placed & Confirmed', time: '10:15 AM', completed: true },
+        { title: 'Picked up by Courier', time: '02:30 PM', completed: status !== 'Processing' },
+        { title: 'In Transit to Regional Distribution Hub', time: '05:45 PM', completed: status === 'Dispatched' || status === 'Delivered' },
+        { title: 'Out for Final Delivery', time: 'Expected 09:00 AM', completed: status === 'Delivered' },
+        { title: 'Delivered & Handed to Recipient', time: 'Expected 04:00 PM', completed: status === 'Delivered' }
+      ]
+    };
+
+    return res.json({ success: true, tracking: trackingInfo });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   updateOrderStatus,
   cancelOrder,
-  deleteOrder
+  deleteOrder,
+  getOrderInvoice,
+  getOrderTracking
 };

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Package, RefreshCw, UserCheck, Lock } from 'lucide-react';
+import { Package, RefreshCw, UserCheck, Lock, FileText, Truck } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { downloadOrderInvoice } from '../utils/invoiceGenerator';
+import TrackingModal from './TrackingModal';
 
 export default function OrdersTab({ user, onNavigateToProfile }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTrackingOrder, setSelectedTrackingOrder] = useState(null);
 
   const fetchUserOrders = async () => {
     if (!user || !user.email) return;
@@ -136,11 +139,27 @@ export default function OrdersTab({ user, onNavigateToProfile }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <div>
                   <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>TOTAL AMOUNT</span>
                   <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#047857' }}>LKR {(order.price * order.quantity).toLocaleString()}</span>
                 </div>
+
+                <button 
+                  onClick={() => setSelectedTrackingOrder(order)} 
+                  className="btn-primary" 
+                  style={{ padding: '0.5rem 0.9rem', fontSize: '0.82rem', background: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Truck size={15} /> Track Courier
+                </button>
+
+                <button 
+                  onClick={() => downloadOrderInvoice(order)} 
+                  className="btn-secondary" 
+                  style={{ padding: '0.5rem 0.9rem', fontSize: '0.82rem', color: '#4f46e5', borderColor: '#c7d2fe', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <FileText size={15} /> Bill
+                </button>
 
                 {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
                   <button onClick={() => handleCancel(order._id)} className="btn-secondary" style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '0.5rem 0.9rem', fontSize: '0.82rem' }}>
@@ -153,6 +172,13 @@ export default function OrdersTab({ user, onNavigateToProfile }) {
           ))}
         </div>
       )}
+
+      {/* Tracking Modal */}
+      <TrackingModal 
+        isOpen={!!selectedTrackingOrder} 
+        onClose={() => setSelectedTrackingOrder(null)} 
+        order={selectedTrackingOrder} 
+      />
 
     </div>
   );

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../providers/app_provider.dart';
 import '../providers/locale_provider.dart';
@@ -10,13 +12,13 @@ import '../providers/locale_provider.dart';
 class ChatScreen extends StatefulWidget {
   final String sellerName;
   final String itemTitle;
-  final double itemPrice;
+  final String? itemPrice;
 
   const ChatScreen({
     super.key,
     this.sellerName = 'Official Store HQ',
     this.itemTitle = 'In-App Support & Live Chat',
-    this.itemPrice = 349.99,
+    this.itemPrice,
   });
 
   @override
@@ -27,27 +29,104 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   final TextEditingController _offerController = TextEditingController();
   IO.Socket? socket;
-  final String userId = 'user_demo';
+  String _getEffectiveUserId(AppProvider provider) {
+    if (provider.isLoggedIn && provider.userEmail.isNotEmpty) {
+      return provider.userEmail;
+    }
+    if (provider.isLoggedIn && provider.userName.isNotEmpty) {
+      return 'user_${provider.userName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_')}';
+    }
+    return 'guest_customer';
+  }
 
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'id': 1,
-      'isMe': false,
-      'sender': 'Support',
-      'text': 'Hello! Welcome to Marketplace Support. How can we help you today?',
-      'time': '10:14 AM',
-      'type': 'text',
-    },
-  ];
+  String _getEffectiveUserName(AppProvider provider) {
+    if (provider.isLoggedIn && provider.userName.isNotEmpty) {
+      return provider.userName;
+    }
+    return 'App Customer';
+  }
+
+  final List<Map<String, dynamic>> _messages = [];
+
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
+    if (widget.itemTitle.isNotEmpty && widget.itemTitle != 'In-App Support & Live Chat') {
+      final priceStr = widget.itemPrice != null ? ' (LKR ${widget.itemPrice})' : '';
+      _msgController.text = 'Hi Admin! Is "${widget.itemTitle}"$priceStr available in stock?';
+    }
     _connectSocket();
+    _fetchHistoryFromREST();
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) => _fetchHistoryFromREST());
+  }
+
+  Future<void> _fetchHistoryFromREST() async {
+    if (!mounted) return;
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserId = _getEffectiveUserId(provider);
+    final currentUserName = _getEffectiveUserName(provider);
+    final currentUserEmail = provider.userEmail;
+
+    try {
+      final queryParams = <String>[];
+      if (currentUserEmail.isNotEmpty) queryParams.add('email=${Uri.encodeComponent(currentUserEmail)}');
+      if (currentUserId.isNotEmpty) queryParams.add('id=${Uri.encodeComponent(currentUserId)}');
+      final queryStr = queryParams.isNotEmpty ? '?${queryParams.join('&')}' : '';
+
+      final response = await http.get(Uri.parse('http://localhost:5000/api/chats/user/${Uri.encodeComponent(currentUserId)}$queryStr'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['messages'] is List) {
+          final List rawMsgs = data['messages'];
+          if (mounted) {
+            setState(() {
+              _messages.clear();
+              final seenKeys = <String>{};
+              for (var m in rawMsgs) {
+                final isAdmin = m['isAdmin'] == true;
+                final senderId = m['senderId'] ?? '';
+                final userEmail = m['userEmail'] ?? '';
+                final isMe = !isAdmin && (
+                  senderId == currentUserId || 
+                  (currentUserEmail.isNotEmpty && userEmail == currentUserEmail) || 
+                  m['sender'] == currentUserName ||
+                  m['senderName'] == currentUserName
+                );
+
+                final msgIdStr = (m['_id'] ?? m['id'] ?? '').toString();
+                final textKey = '${m['text']}_${m['createdAt']}_$isMe';
+                final dedupKey = msgIdStr.isNotEmpty ? msgIdStr : textKey;
+
+                if (!seenKeys.contains(dedupKey)) {
+                  seenKeys.add(dedupKey);
+                  _messages.add({
+                    'id': msgIdStr.isNotEmpty ? msgIdStr : DateTime.now().millisecondsSinceEpoch,
+                    'isMe': isMe,
+                    'sender': isMe ? 'You' : (isAdmin ? 'Admin Support' : (m['senderName'] ?? m['sender'] ?? 'Admin Support')),
+                    'text': m['text'] ?? '',
+                    'time': m['createdAt'] != null ? DateTime.parse(m['createdAt']).toLocal().toString().substring(11, 16) : 'Just now',
+                    'type': m['type'] ?? 'text',
+                    'offerPrice': m['offerData']?['amount'],
+                    'status': m['offerData']?['status'] ?? 'pending',
+                  });
+                }
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print('REST history fetch error: $e');
+    }
   }
 
   void _connectSocket() {
     try {
+      final provider = Provider.of<AppProvider>(context, listen: false);
+      final currentUserId = _getEffectiveUserId(provider);
+
       socket = IO.io(
         'http://localhost:5000',
         IO.OptionBuilder()
@@ -59,38 +138,12 @@ class _ChatScreenState extends State<ChatScreen> {
       socket?.connect();
 
       socket?.onConnect((_) {
-        print('Flutter Socket Connected');
-        socket?.emit('join_user', userId);
+        socket?.emit('join_user', currentUserId);
         socket?.emit('join_chat', 'support_chat');
       });
 
-      void handleIncomingMessage(dynamic data) {
-        if (data == null || !mounted) return;
-        final mapData = data is Map ? data : {'text': data.toString()};
-        final msgId = mapData['id'] ?? DateTime.now().millisecondsSinceEpoch;
-        final senderId = mapData['senderId'] ?? '';
-        final isMe = senderId == userId || mapData['sender'] == 'You';
-        final sender = isMe ? 'You' : (mapData['sender'] ?? 'Admin Support');
-        final text = mapData['text'] ?? '';
-
-        setState(() {
-          if (!_messages.any((m) => m['id'] == msgId)) {
-            _messages.add({
-              'id': msgId,
-              'isMe': isMe,
-              'sender': sender,
-              'text': text,
-              'time': mapData['time'] ?? 'Just now',
-              'type': mapData['type'] ?? 'text',
-              'offerPrice': mapData['offerData']?['amount'],
-              'status': mapData['offerData']?['status'] ?? 'pending',
-            });
-          }
-        });
-      }
-
-      socket?.on('receive_message', handleIncomingMessage);
-      socket?.on('chat_message', handleIncomingMessage);
+      socket?.on('receive_message', (_) => _fetchHistoryFromREST());
+      socket?.on('chat_message', (_) => _fetchHistoryFromREST());
 
     } catch (e) {
       print('Socket connection error: $e');
@@ -99,6 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     socket?.disconnect();
     socket?.dispose();
     _msgController.dispose();
@@ -106,37 +160,63 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _sendMessage([String? customText]) {
+  Future<void> _sendMessage([String? customText]) async {
     final text = customText ?? _msgController.text.trim();
     if (text.isEmpty) return;
 
-    final msgId = DateTime.now().millisecondsSinceEpoch;
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserId = _getEffectiveUserId(provider);
+    final currentUserName = _getEffectiveUserName(provider);
+    final currentUserEmail = provider.userEmail;
+
+    _msgController.clear();
+
     final payload = {
-      'id': msgId,
       'chatId': 'support_chat',
-      'userId': userId,
-      'senderId': userId,
-      'sender': 'You',
+      'senderId': currentUserId,
+      'userEmail': currentUserEmail,
+      'sender': currentUserName,
+      'senderName': currentUserName,
+      'userName': currentUserName,
+      'device': 'Mobile App',
       'text': text,
       'type': 'text',
-      'time': 'Just now',
+      'isAdmin': false,
     };
 
+    // Send via REST API directly to MongoDB
+    try {
+      await http.post(
+        Uri.parse('http://localhost:5000/api/chats/send'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(payload),
+      );
+      _fetchHistoryFromREST();
+    } catch (e) {
+      print('Error sending REST message from Flutter: $e');
+    }
+
     socket?.emit('send_message', payload);
-    _msgController.clear();
   }
 
   void _sendCounterOffer() {
     final amount = double.tryParse(_offerController.text.trim());
     if (amount == null || amount <= 0) return;
 
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserId = _getEffectiveUserId(provider);
+    final currentUserName = _getEffectiveUserName(provider);
+
     final msgId = DateTime.now().millisecondsSinceEpoch;
     final payload = {
       'id': msgId,
       'chatId': 'support_chat',
-      'userId': userId,
-      'senderId': userId,
-      'sender': 'You',
+      'userId': currentUserId,
+      'senderId': currentUserId,
+      'sender': currentUserName,
+      'senderName': currentUserName,
+      'userName': currentUserName,
+      'device': 'Mobile App',
       'text': 'Counter Offer \$${amount.toStringAsFixed(2)}',
       'type': 'offer',
       'offerData': {'amount': amount, 'status': 'pending'},
@@ -185,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Text('Submit Price Offer', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: provider.textColor)),
               const SizedBox(height: 6),
-              Text('Item Original Price: \$${widget.itemPrice.toStringAsFixed(2)}', style: TextStyle(color: provider.subtextColor, fontSize: 13)),
+              Text('Item Original Price: \$${widget.itemPrice ?? "349.99"}', style: TextStyle(color: provider.subtextColor, fontSize: 13)),
               const SizedBox(height: 16),
               TextField(
                 controller: _offerController,
@@ -222,6 +302,64 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final localeProvider = context.watch<LocaleProvider>();
+
+    if (!provider.isLoggedIn || provider.userEmail.isEmpty) {
+      return Scaffold(
+        backgroundColor: provider.scaffoldBg,
+        appBar: AppBar(
+          backgroundColor: provider.cardBg,
+          elevation: 1,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: provider.textColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text('Live Chat Support', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: provider.textColor)),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(LucideIcons.lock, size: 52, color: Color(0xFF6366F1)),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Login Required to Chat',
+                  style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: provider.textColor),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please log in to your Marketplace account to start chatting with Support and merchants.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(color: provider.subtextColor, fontSize: 13.5),
+                ),
+                const SizedBox(height: 28),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  icon: const Icon(LucideIcons.logIn, color: Colors.white, size: 18),
+                  label: const Text('Log In / Register', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15)),
+                  onPressed: () {
+                    provider.setTab(3); // Navigate to Profile / Login tab
+                    Navigator.pop(context);
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: provider.scaffoldBg,

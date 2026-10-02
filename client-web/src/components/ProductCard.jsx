@@ -9,7 +9,11 @@ export default function ProductCard({ item, onSelect, onAddToCart, onOpenOffer, 
   const isSoldOut = item.stockQuantity === 0 || item.status === 'sold';
 
   return (
-    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div 
+      onClick={() => onSelect(item)}
+      className="glass-card" 
+      style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.25s ease' }}
+    >
       
       {/* Product Image Box */}
       <div style={{ position: 'relative', width: '100%', height: '210px', background: '#f1f5f9', overflow: 'hidden' }}>
@@ -77,8 +81,7 @@ export default function ProductCard({ item, onSelect, onAddToCart, onOpenOffer, 
           </div>
 
           <h3 
-            onClick={() => onSelect(item)}
-            style={{ fontSize: '1.05rem', fontWeight: '800', color: '#0f172a', margin: '0.3rem 0 0.6rem 0', cursor: 'pointer', lineHeight: 1.35 }}
+            style={{ fontSize: '1.05rem', fontWeight: '800', color: '#0f172a', margin: '0.3rem 0 0.6rem 0', lineHeight: 1.35 }}
           >
             {item.title}
           </h3>
@@ -101,25 +104,14 @@ export default function ProductCard({ item, onSelect, onAddToCart, onOpenOffer, 
             {item.stockQuantity > 0 ? `${item.stockQuantity} units in stock` : 'Out of Stock'}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <button 
-              onClick={() => onAddToCart(item)}
-              disabled={isSoldOut}
-              className="btn-primary"
-              style={{ padding: '0.55rem', fontSize: '0.82rem', justifyContent: 'center', opacity: isSoldOut ? 0.5 : 1 }}
-            >
-              <ShoppingBag size={14} /> Add Cart
-            </button>
-
-            <button 
-              onClick={() => onOpenOffer(item)}
-              disabled={isSoldOut}
-              className="btn-secondary"
-              style={{ padding: '0.55rem', fontSize: '0.82rem', justifyContent: 'center' }}
-            >
-              <MessageSquare size={14} color="#ec4899" /> Offer
-            </button>
-          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onAddToCart(item); }}
+            disabled={isSoldOut}
+            className="btn-primary"
+            style={{ width: '100%', padding: '0.55rem', fontSize: '0.82rem', justifyContent: 'center', opacity: isSoldOut ? 0.5 : 1 }}
+          >
+            <ShoppingBag size={14} /> Add Cart
+          </button>
         </div>
 
       </div>

@@ -18,6 +18,18 @@ class ProductDetailScreen extends StatelessWidget {
     final provider = Provider.of<AppProvider>(context);
     final isFav = provider.isFavorite(item.id);
 
+    final categoryRelated = provider.listings.where((l) {
+      final isSameId = l.id == item.id;
+      final sameCat = (l.category.isNotEmpty && item.category.isNotEmpty)
+          ? l.category.trim().toLowerCase() == item.category.trim().toLowerCase()
+          : false;
+      return !isSameId && sameCat;
+    }).toList();
+
+    final displayRelated = categoryRelated.isNotEmpty
+        ? categoryRelated
+        : provider.listings.where((l) => l.id != item.id).toList();
+
     return Scaffold(
       backgroundColor: provider.scaffoldBg,
       body: SafeArea(
@@ -248,6 +260,123 @@ class ProductDetailScreen extends StatelessWidget {
                       item.description,
                       style: GoogleFonts.inter(fontSize: 13, color: provider.subtextColor, height: 1.5),
                     ),
+
+                    if (displayRelated.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Divider(height: 1, color: provider.cardBorder),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'More in ${item.category.isNotEmpty ? item.category : "Category"}',
+                              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800, color: provider.textColor),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${displayRelated.length} Items',
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF818CF8)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 205,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: displayRelated.length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final relItem = displayRelated[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ProductDetailScreen(item: relItem),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 145,
+                                decoration: BoxDecoration(
+                                  color: provider.cardBg,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: provider.cardBorder),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                                      child: SizedBox(
+                                        height: 100,
+                                        width: double.infinity,
+                                        child: Image.network(
+                                          relItem.images.isNotEmpty ? relItem.images[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              color: provider.cardBg,
+                                              child: Center(
+                                                child: Icon(LucideIcons.package, color: provider.subtextColor, size: 24),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            relItem.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: provider.textColor),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            '\$${relItem.price.toStringAsFixed(0)}',
+                                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFF34D399)),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.05),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              relItem.category.isNotEmpty ? relItem.category : 'Store Item',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.inter(fontSize: 9, color: provider.subtextColor),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -262,6 +391,30 @@ class ProductDetailScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // Chat / Ask Admin Button
+                  IconButton(
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.all(12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            sellerName: item.sellerName, 
+                            itemTitle: item.title,
+                            itemPrice: item.price.toString(),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(LucideIcons.messageSquare, size: 20),
+                    tooltip: 'Ask Admin About This Item',
+                  ),
+                  const SizedBox(width: 8),
                   // Add to Cart Button
                   Expanded(
                     child: OutlinedButton.icon(
@@ -303,10 +456,10 @@ class ProductDetailScreen extends StatelessWidget {
                         );
                       },
                       icon: const Icon(LucideIcons.shoppingCart, size: 16),
-                      label: Text('Add to Cart', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
+                      label: Text('Cart', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   // Buy Now Button
                   Expanded(
                     child: ElevatedButton(
@@ -323,7 +476,7 @@ class ProductDetailScreen extends StatelessWidget {
                           MaterialPageRoute(builder: (_) => CheckoutScreen(item: item)),
                         );
                       },
-                      child: Text('⚡ Buy Now', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text('⚡ Buy Now', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ),
                 ],

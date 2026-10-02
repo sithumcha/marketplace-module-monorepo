@@ -95,30 +95,20 @@ export default function ProductDetailModal({ item, onClose, onAddToCart, onOpenO
 
             {/* Action buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <button 
-                  onClick={() => { onAddToCart(item); onClose(); }} 
-                  className="btn-primary" 
-                  style={{ justifyContent: 'center', padding: '0.75rem' }}
-                >
-                  <ShoppingBag size={18} /> Add to Cart
-                </button>
-
-                <button 
-                  onClick={() => { onOpenOffer(item); onClose(); }} 
-                  className="btn-accent" 
-                  style={{ justifyContent: 'center', padding: '0.75rem' }}
-                >
-                  <MessageSquare size={18} /> Make Offer
-                </button>
-              </div>
+              <button 
+                onClick={() => { onAddToCart(item); onClose(); }} 
+                className="btn-primary" 
+                style={{ justifyContent: 'center', padding: '0.75rem', width: '100%' }}
+              >
+                <ShoppingBag size={18} /> Add to Cart
+              </button>
 
               <button 
-                onClick={() => { onOpenChat(); onClose(); }} 
+                onClick={() => { onOpenChat(item); onClose(); }} 
                 className="btn-secondary" 
-                style={{ justifyContent: 'center', padding: '0.65rem' }}
+                style={{ justifyContent: 'center', padding: '0.75rem', background: 'linear-gradient(135deg, #4f46e5, #ec4899)', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                Chat with Seller
+                <MessageSquare size={18} /> 💬 Ask Admin / Chat About This Item
               </button>
             </div>
 
