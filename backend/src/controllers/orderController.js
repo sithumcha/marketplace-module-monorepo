@@ -197,6 +197,11 @@ const getOrderInvoice = async (req, res) => {
       shippingFee: 500,
       grandTotal: (order.price * (order.quantity || 1)) + 500
     };
+    return res.json({ success: true, invoice: invoiceData });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 const getOrderTracking = async (req, res) => {
   try {
