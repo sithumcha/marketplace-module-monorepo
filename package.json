@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "Complete Marketplace Module Monorepo (Client Web, Mobile App, Admin Panel, Express/MongoDB Backend)",
   "scripts": {
-    "start": "node start_all.js",
-    "dev": "node start_all.js --dev",
-    "start:all": "node start_all.js",
-    "start:backend": "cd backend && npm start",
-    "start:admin": "cd admin-panel && npm run dev",
-    "start:client": "cd client-web && npm run dev",
-    "start:mobile": "cd mobile-app && flutter run -d chrome"
+    "start": "node init && node start_all.js",
+    "dev": "node init && node start_all.js --dev",
+    "start:all": "node init && node start_all.js",
+    "start:backend": "node init && cd backend && npm start",
+    "start:admin": "node init && cd admin-panel && npm run dev",
+    "start:client": "node init && cd client-web && npm run dev",
+    "start:mobile": "node init && cd mobile-app && flutter run -d chrome"
   },
   "devDependencies": {
     "puppeteer-core": "^25.8.0"

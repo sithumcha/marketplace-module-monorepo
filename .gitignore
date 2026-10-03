@@ -3,7 +3,6 @@ node_modules/
 **/node_modules/
 
 # Environment variables
-.env
 backend/.env
 
 # Build outputs & Logs
@@ -24,5 +23,5 @@ mongodb.log
 # IDE / OS files
 .DS_Store
 .idea/
-.vscode/
 *.swp
+config.bat

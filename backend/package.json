@@ -4,8 +4,8 @@
   "description": "Backend API and Real-Time Negotiation Engine for Marketplace Module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node init && node server.js",
+    "dev": "node init && node server.js"
   },
   "dependencies": {
     "cloudinary": "^2.11.0",
