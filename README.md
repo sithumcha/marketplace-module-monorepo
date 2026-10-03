@@ -147,9 +147,17 @@ This automatically starts:
 ![Client Web Account Profile](./screenshots/client_web_profile.png)
 *Manage personal user profile, shipping addresses, bank details for payouts, and view/manage posted products.*
 
-#### 5. 🛒 Realtime Shopping Cart Drawer & Checkout
+#### 5. 🛒 Realtime Shopping Cart Drawer
 ![Client Web Cart Drawer](./screenshots/client_web_cart.png)
-*Slide-out shopping cart drawer with quantity modifiers, instant promo code input, and multi-payment option checkout modal.*
+*Slide-out shopping cart drawer with quantity modifiers, instant promo code input, and free shipping progress indicator.*
+
+#### 6. 💳 Fast Checkout & Payment Gateway Modal
+![Client Web Fast Checkout Modal](./screenshots/client_web_checkout.png)
+*Checkout modal with customer info, saved delivery address picker, order breakdown, and payment selection (Credit Card, Cash on Delivery, Bank Transfer).*
+
+#### 7. 📄 Printable Order Bill & Invoice Generator
+![Printable Order Invoice](./screenshots/invoice_preview.png)
+*Automated PDF Order Receipt & Invoice generator featuring customer shipping details, itemized totals, promo discount deduction, and 1-click print or save PDF button.*
 
 ---
 
@@ -166,10 +174,30 @@ This automatically starts:
 
 ---
 
-### 📱 Mobile Web App (`http://localhost:3000`)
-![Mobile Home](./screenshots/mobile_home.png)
+### 📱 Flutter Mobile App (`http://localhost:3000`)
+*(Demonstrated logged-in with sample customer: **Kasun Perera** - `kasun.perera@example.com`)*
 
-*Dual-role Flutter mobile web app for buyer store browsing & seller listing management.*
+#### 1. 📱 Mobile Home & Product Marketplace Feed
+![Mobile Home Screen](./screenshots/mobile_home_user.png)
+*Flutter mobile homepage with logged-in user state, category filters, featured products grid, and bottom navigation.*
+
+#### 2. 🔍 Mobile Search & Category Explorer
+![Mobile Search Screen](./screenshots/mobile_search_user.png)
+*Instant filter search bar, taxonomy categories, price range filters, and condition tags.*
+
+#### 3. 🛒 Mobile Shopping Cart Screen
+![Mobile Cart Screen](./screenshots/mobile_cart_user.png)
+*Mobile cart manager synced with user MongoDB account, quantity controls, promo claim box, and order summary.*
+
+#### 4. 💳 Mobile Checkout & Payment Gateways
+![Mobile Checkout Screen](./screenshots/mobile_checkout_user.png)
+*Mobile checkout screen with shipping address selection, order item breakdown, and instant order placement.*
+
+#### 5. 👤 Logged-In User Profile & Account Hub
+![Mobile Profile Screen](./screenshots/mobile_profile_user.png)
+*Logged-in user profile hub displaying member avatar, order history timeline, saved delivery addresses, bank payout details, and dark/light theme switcher.*
+
+
 
 ---
 
