@@ -127,5 +127,52 @@ This automatically starts:
 
 ---
 
+## 📸 App Screenshots & UI Showcase
+
+### 🌐 Client Web Storefront (`http://localhost:3002`)
+
+#### 1. 🏠 Storefront Explore & Hero Promo Slider Page
+![Client Web Storefront Explore](./screenshots/client_web_home.png)
+*Featuring Google Font `Plus Jakarta Sans`, animated glassmorphic hero promo slider, live category filter tabs, product search, and rating badges.*
+
+#### 2. 🏪 Verified Business Directory Page
+![Client Web Business Directory](./screenshots/client_web_directory.png)
+*Browse local registered businesses, view service categories, ratings, direct chat messaging, and contact details.*
+
+#### 3. 📦 Customer Orders & Realtime Status Tracking Page
+![Client Web Customer Orders](./screenshots/client_web_orders.png)
+*View placed orders queue, order status timeline (Placed, Processing, Dispatched, Delivered), and interactive order tracking.*
+
+#### 4. 👤 Account Profile & Seller Management Page
+![Client Web Account Profile](./screenshots/client_web_profile.png)
+*Manage personal user profile, shipping addresses, bank details for payouts, and view/manage posted products.*
+
+#### 5. 🛒 Realtime Shopping Cart Drawer & Checkout
+![Client Web Cart Drawer](./screenshots/client_web_cart.png)
+*Slide-out shopping cart drawer with quantity modifiers, instant promo code input, and multi-payment option checkout modal.*
+
+---
+
+### 🖥️ Admin Moderation Panel (`http://localhost:3001`)
+![Admin Dashboard](./screenshots/admin_dashboard.png)
+
+*The React Admin Panel in Light Mode featuring real-time sales metrics, MongoDB order management with permanent order deletion, category taxonomy manager, and promo code generator.*
+
+#### 🏷️ Promo Code Manager (Admin)
+![Admin Promos Manager](./screenshots/admin_promos.png)
+
+#### 📦 Orders Queue & Status Manager (Admin)
+![Admin Orders Queue](./screenshots/admin_orders.png)
+
+---
+
+### 📱 Mobile Web App (`http://localhost:3000`)
+![Mobile Home](./screenshots/mobile_home.png)
+
+*Dual-role Flutter mobile web app for buyer store browsing & seller listing management.*
+
+---
+
 ## 📄 License
 This project is proprietary software created for the Marketplace Module Platform.
+
